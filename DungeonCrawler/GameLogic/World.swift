@@ -213,17 +213,53 @@ final class World: ObservableObject {
     func performAttack() {
         // Attack tile in front
         let targetPos = partyPosition + partyHeading.toCoordinate
+
+        // Find which party member is dealing the damage
+        // For simplicity in this group-based movement, we'll say the "Active" member if in combat,
+        // or the "Front Left" (Leader) if initiating.
+        let attacker: Combatant
+        if isCombatActive, let active = activeCombatant {
+            attacker = active
+        } else {
+            attacker = partyMembers[.frontLeft]
+        }
+
         if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
-            // Calculate Damage based on attributes?
-            // For now fixed
-            enemy.takeDamage(5)
-            print("Attacked enemy at \(targetPos), it took damage.")
-            if !enemy.isAlive {
-                print("Enemy defeated!")
-            }
-            // If not in combat, this should start combat if not dead?
-            if !isCombatActive && enemy.isAlive {
-                startCombat()
+            // Combat Math
+            let hitChance = 50 + (attacker.attributes.dexterity * 2) - (enemy.attributes.agility)
+            let roll = rollDie(sides: 100)
+
+            if roll <= hitChance {
+                // Hit!
+                var damage = attacker.attributes.strength / 2
+
+                // Crit Check (Luck)
+                let critChance = attacker.attributes.luck
+                if rollDie(sides: 100) <= critChance {
+                    damage *= 2
+                    print("Critical Hit!")
+                }
+
+                // Ensure at least 1 damage
+                damage = max(1, damage)
+
+                enemy.takeDamage(damage)
+                print("\(attacker.name) attacked \(enemy.name) for \(damage) damage!")
+
+                if !enemy.isAlive {
+                    print("Enemy defeated!")
+                }
+
+                if !isCombatActive && enemy.isAlive {
+                    startCombat()
+                }
+            } else {
+                print(
+                    "\(attacker.name) missed \(enemy.name)! (Rolled \(roll) vs Chance \(hitChance))"
+                )
+                if !isCombatActive {
+                    startCombat()  // Miss still triggers combat
+                }
             }
         } else {
             print("Swung at nothing.")

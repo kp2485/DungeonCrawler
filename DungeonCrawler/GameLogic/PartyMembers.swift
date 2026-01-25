@@ -6,12 +6,15 @@
 //
 
 final class PartyMembers {
-    private let members = [
-        PartyMember(name: "Hero"),
-        PartyMember(name: "Wizard"),
-        PartyMember(name: "Rogue"),
-        PartyMember(name: "Cleric"),
-    ]
+    private let members: [PartyMember]
+
+    init() {
+        let shuffledCharacters = GreekPantheon.allCharacters.shuffled()
+        // Take top 4, or fewer if not enough (unlikely)
+        let selected = Array(shuffledCharacters.prefix(4))
+
+        self.members = selected.map { PartyMember(character: $0) }
+    }
 
     subscript(partyPosition: PartyPosition) -> PartyMember {
         switch partyPosition {

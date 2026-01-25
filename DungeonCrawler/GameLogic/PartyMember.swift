@@ -7,6 +7,7 @@
 
 final class PartyMember: Combatant {
     let name: String
+    let title: String
     var currentHP: Int
     var currentInitiative: Int = 0
     let attributes: Attributes
@@ -15,10 +16,11 @@ final class PartyMember: Combatant {
         attributes.endurance * 2
     }
 
-    init(name: String, attributes: Attributes = .random) {
-        self.name = name
-        self.attributes = attributes
-        self.currentHP = attributes.endurance * 2
+    init(character: MythologicalCharacter) {
+        self.name = character.name
+        self.title = character.title
+        self.attributes = character.baseAttributes
+        self.currentHP = character.baseAttributes.endurance * 2
     }
 
     func takeDamage(_ amount: Int) {
