@@ -9,15 +9,15 @@ final class Player {
     private(set) var position = Coordinate(x: 0, y: 0)
     private(set) var heading = CompassDirection.north
     
-    func move(_ direction: Direction) {
-        position += direction
+    func move(_ direction: MovementDirection) {
+        position += direction.toCompassDirection(facing: heading).toCoordinate
     }
     
     func turnClockwise() {
-        heading = heading.rotatedClockwise
+        heading = heading.rotatedClockwise()
     }
     
     func turnCounterclockwise() {
-        heading = heading.rotatedCounterclockwise
+        heading = heading.rotatedClockwise().rotatedClockwise().rotatedClockwise()
     }
 }

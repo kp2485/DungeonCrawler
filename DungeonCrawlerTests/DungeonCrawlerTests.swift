@@ -2,80 +2,138 @@
 //  DungeonCrawlerTests.swift
 //  DungeonCrawlerTests
 //
-//  Created by Kyle Peterson on 1/24/26.
+//  Created by Maarten Engels on 22/02/2025.
 //
 
 import Testing
 @testable import DungeonCrawler
 
-@Suite("Player movement should")
-struct PlayerMovementTests {
-    @Test("movement in a specified direction gets to the expected coordinate", arguments: [
-        (Direction.forward, Coordinate(x: 0, y: 1)),
-        (Direction.backwards, Coordinate(x: 0, y: -1)),
-        (Direction.left, Coordinate(x: -1, y: 0)),
-        (Direction.right, Coordinate(x: 1, y: 0))
-    ]) func movePlayerForward(testcase: (direction: Direction, expectedPosition: Coordinate)) {
-        let player = Player()
-        
-        player.move(testcase.direction)
-        
-        #expect(player.position == testcase.expectedPosition)
+@Suite("Party movement should") struct PartyMovementTests {
+    @Test("get to the expected coordinate, when it moves in a specified direction", arguments: [
+        (MovementDirection.forward, Coordinate(x: 0, y: 1)),
+        (MovementDirection.backwards, Coordinate(x: 0, y: -1)),
+        (MovementDirection.left, Coordinate(x: -1, y: 0)),
+        (MovementDirection.right, Coordinate(x: 1, y: 0))
+    ]) func movePartyForward(testcase: (direction: MovementDirection, expectedPosition: Coordinate)) {
+        let world = World(map: Map())
+
+        world.perform(.move(direction: testcase.direction))
+
+        #expect(world.partyPosition == testcase.expectedPosition)
     }
-    
-    @Test("move forward twice to get to coordinate (0,2)") func movePlayerForwardTwice() {
-        let player = Player()
-        
-        player.move(.forward)
-        player.move(.forward)
-        
-        #expect(player.position == Coordinate(x:0, y:2))
+
+    @Test("get to coordinate (0,2) when it moves forward twice") func movePartyForwardTwice() {
+        let world = World(map: Map())
+
+        world.perform(.move(direction: .forward))
+        world.perform(.move(direction: .forward))
+
+        #expect(world.partyPosition == Coordinate(x: 0, y: 2))
     }
-    
-    @Test("returns to initial position after moving forward, right, back and then left") func moveInACircle() {
-        let player = Player()
-        
-        player.move(.forward)
-        player.move(.right)
-        player.move(.backwards)
-        player.move(.left)
-        
-        #expect(player.position == Coordinate(x:0, y:0))
+
+    @Test("stays in the same position, when you move forward first, then right, then back and finally left") func moveInACircle() {
+        let world = World(map: Map())
+
+        world.perform(.move(direction: .forward))
+        world.perform(.move(direction: .right))
+        world.perform(.move(direction: .backwards))
+        world.perform(.move(direction: .left))
+
+        #expect(world.partyPosition == Coordinate(x: 0, y: 0))
+    }
+
+    @Test("get to the expected coordinate when it moves in the designated direction while heading a certain way", arguments: [
+        (Coordinate(x: 0, y: 0), CompassDirection.west, MovementDirection.forward, Coordinate(x: -1, y: 0)),
+        (Coordinate(x: -4, y: 5), CompassDirection.south, MovementDirection.backwards, Coordinate(x: -4, y: 6)),
+        (Coordinate(x: 11, y: -4), CompassDirection.east, MovementDirection.right, Coordinate(x: 11, y: -5)),
+        (Coordinate(x: 24, y: 72), CompassDirection.north, MovementDirection.left, Coordinate(x: 23, y: 72)),
+        (Coordinate(x: 24, y: 72), CompassDirection.south, MovementDirection.left, Coordinate(x: 25, y: 72))
+    ]) func movementTakesHeadingIntoAccount(testcase: (startPosition: Coordinate, heading: CompassDirection, movementDirection: MovementDirection, expectedPosition: Coordinate)) {
+        let world = World(map: Map(), partyStartPosition: testcase.startPosition, partyStartHeading: testcase.heading)
+
+        world.perform(.move(direction: testcase.movementDirection))
+
+        #expect(world.partyPosition == testcase.expectedPosition)
+    }
+
+    @Test("not move through walls") func cannotMoveThroughWalls() {
+        let map = Map([
+            ["#", "#", "#", "#"],
+            ["#", ".", ".", "#"],
+            ["#", "#", "#", "#"]
+        ])
+        let world = World(map: map, partyStartPosition: Coordinate(x: 0, y: 1))
+
+        world.perform(.move(direction: .forward))
+
+        #expect(world.partyPosition == Coordinate(x: 0, y: 1))
     }
 }
 
-@Suite("Player rotation should") struct PlayerRotationTests {
-    @Test("face north when the new player is created") func newPlayerFacesNorth() {
-        let player = Player()
-        
-        
-        
-        #expect(player.heading == .north)
+@Suite("Party rotation should") struct PartyRotationTests {
+    @Test("face north when the new world is created") func partyInNewWorldFacesNorth() {
+        let world = World(map: Map())
+
+        #expect(world.partyHeading == .north)
     }
-    
+
     @Test("face east when it turns clockwise") func turnClockwiseOnce() {
-        let player = Player()
-        
-        player.turnClockwise()
-        
-        #expect(player.heading == .east)
+        let world = World(map: Map())
+
+        world.perform(.turnClockwise)
+
+        #expect(world.partyHeading == .east)
     }
-    
+
     @Test("face west when it turns clockwise three times") func turnClockwiseThreeTimes() {
-        let player = Player()
-        
-        player.turnClockwise()
-        player.turnClockwise()
-        player.turnClockwise()
-        
-        #expect(player.heading == .west)
+        let world = World(map: Map())
+
+        world.perform(.turnClockwise)
+        world.perform(.turnClockwise)
+        world.perform(.turnClockwise)
+
+        #expect(world.partyHeading == .west)
     }
-    
-    @Test("face west when turning counterclockwise once") func turnCounterclockwise() {
-        let player = Player()
-        
-        player.turnCounterclockwise()
-        
-        #expect(player.heading == .west)
+
+    @Test("face west when it turns counter clockwise once") func turnCounterClockwise() {
+        let world = World(map: Map())
+
+        world.perform(.turnCounterClockwise)
+
+        #expect(world.partyHeading == .west)
+    }
+}
+
+@Suite("When moving from one floor to another") struct MultipleLevelTests {
+    let floor1 = Map([
+        [".", "<"]
+    ])
+
+    let floor2 = Map([
+        [".", ">"]
+    ])
+
+    @Test("a new party starts at the first floor") func newPartyStartsAtFirstFloor() {
+        let world = World(floors: [floor1, floor2])
+
+        #expect(world.currentFloor == floor1)
+    }
+
+    @Test("when a party moves into a staircase, they should end up on the second floor") func partyMovesUpStairs() {
+        let world = World(floors: [floor1, floor2])
+
+        world.perform(.move(direction: .right))
+
+        #expect(world.currentFloor == floor2)
+    }
+
+    @Test("when a party moves into a staircase leading down when they are on the second floor, they should end up on the first floor") func partyMovesDownStairs() {
+        let world = World(floors: [floor1, floor2])
+        world.perform(.move(direction: .right)) // end up on floor 2
+
+        world.perform(.move(direction: .left))
+        world.perform(.move(direction: .right))
+
+        #expect(world.currentFloor == floor1)
     }
 }

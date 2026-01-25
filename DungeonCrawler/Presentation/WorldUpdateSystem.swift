@@ -2,42 +2,41 @@
 //  WorldUpdateSystem.swift
 //  DungeonCrawler
 //
-//  Created by Kyle Peterson on 1/24/26.
+//  Created by Maarten Engels on 22/02/2025.
 //
 
 import RealityKit
-
-struct WorldComponent: Component {
-    let world: World
-}
+import SwiftUI
 
 class WorldUpdateSystem: System {
     var world: World!
     var cameraAnchor: AnchorEntity!
-    
-    required init(scene: Scene) {
+
+    // Initializer is required. Use an empty implementation if there's no setup needed.
+    required init(scene: RealityKit.Scene) {
         guard let worldEntity = scene.findEntity(named: "WorldEntity") else {
-            fatalError("Can't find WorldEntity in scene")
+            fatalError("Can't find WorldEntity in scene.")
         }
-        
+
         let worldComponents = worldEntity.components.compactMap { $0 as? WorldComponent }
-        
+
         guard let worldComponent = worldComponents.first else {
             fatalError("No WorldComponent found on WorldEntity")
         }
-        
+
         self.world = worldComponent.world
-        
+
         guard let cameraAnchor = scene.findEntity(named: "CameraAnchor") as? AnchorEntity else {
-            fatalError("Can't find CameraAnchor in scene")
+            fatalError("Can't find CameraAnchor in scene.")
         }
-        
+
         self.cameraAnchor = cameraAnchor
-        
     }
-    
+
     func update(context: SceneUpdateContext) {
-        cameraAnchor.position = world.playerPosition
+        world.update(at: Date())
+        
+        cameraAnchor.position = world.partyPosition.toSIMD3
+        cameraAnchor.transform.rotation = world.partyHeading.toFloatQuaternion
     }
-    
 }

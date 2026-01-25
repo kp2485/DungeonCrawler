@@ -2,21 +2,37 @@
 //  Coordinate.swift
 //  DungeonCrawler
 //
-//  Created by Kyle Peterson on 1/24/26.
+//  Created by Maarten Engels on 01/03/2025.
 //
+
+import Foundation
 
 struct Coordinate {
     var x: Int
     var y: Int
-    
-    static func +=(coordinate: inout Coordinate, direction: Direction) {
-        coordinate += direction.toCoordinate
+
+    static func +(lhs: Coordinate, rhs: Coordinate) -> Coordinate {
+        Coordinate(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
     }
     
+    static func -(lhs: Coordinate, rhs: Coordinate) -> Coordinate {
+        Coordinate(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
+    }
+
     static func +=(lhs: inout Coordinate, rhs: Coordinate) {
-        lhs.y += rhs.y
-        lhs.x += rhs.x
+        lhs = lhs + rhs
     }
 }
 
 extension Coordinate: Equatable { }
+extension Coordinate: Hashable { }
+
+extension Coordinate {
+    func manhattanDistanceTo(_ other: Coordinate) -> Int {
+        abs(x - other.x) + abs(y - other.y)
+    }
+    
+    var magnitude: Double {
+        sqrt(Double((x * x) + (y * y)))
+    }
+}
