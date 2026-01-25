@@ -14,6 +14,6 @@ final class Player {
     }
     
     func turnClockwise() {
-        
+        heading = heading.rotatedClockwise
     }
 }
