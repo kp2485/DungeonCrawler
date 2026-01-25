@@ -5,13 +5,13 @@
 //  Created by Maarten Engels on 22/02/2025.
 //
 
-import SwiftUI
 import RealityKit
+import SwiftUI
 
 struct ContentView: View {
     let world: World
     @ObservedObject var viewModel: ViewModel
-    
+
     init() {
         world = makeWorld([
             """
@@ -30,17 +30,40 @@ struct ContentView: View {
             #>#..#
             #T...#
             ######
-            """
+            """,
         ])
 
         viewModel = ViewModel(world: world)
     }
-    
+
     var body: some View {
         ZStack {
             GameView(world: world)
             VStack {
                 HStack {
+                    if viewModel.isCombatActive {
+                        VStack(alignment: .leading) {
+                            Text("COMBAT ACTIVE")
+                                .font(.headline)
+                                .foregroundColor(.red)
+                            Text("Turn Order:")
+                            ForEach(viewModel.turnQueue, id: \.self) { name in
+                                Text(name)
+                                    .fontWeight(
+                                        viewModel.activeCombatantName
+                                            == name.components(separatedBy: " (").first
+                                            ? .bold : .regular
+                                    )
+                                    .foregroundColor(
+                                        viewModel.activeCombatantName
+                                            == name.components(separatedBy: " (").first
+                                            ? .yellow : .white)
+                            }
+                        }
+                        .padding()
+                        .background(Color.black.opacity(0.5))
+                        .cornerRadius(10)
+                    }
                     Spacer()
                     PartyMembersView(partyStats: viewModel.partyStats)
                 }
@@ -49,10 +72,14 @@ struct ContentView: View {
             VStack {
                 VStack {
                     Text("State: \(viewModel.worldState)")
+                    if let active = viewModel.activeCombatantName {
+                        Text("Active: \(active)")
+                            .foregroundColor(.yellow)
+                    }
                 }
                 .background(Color.gray.opacity(0.2))
-                    .foregroundStyle(.white)
-                
+                .foregroundStyle(.white)
+
                 HStack {
                     Button("Turn CCW") {
                         world.perform(.turnCounterClockwise)
@@ -76,6 +103,20 @@ struct ContentView: View {
                         world.perform(.move(direction: .right))
                     }.keyboardShortcut("d", modifiers: [])
 
+                }
+
+                HStack {
+                    Button("Attack") {
+                        world.perform(.attack)
+                    }
+                    .keyboardShortcut("f", modifiers: [])
+                    .disabled(!viewModel.isCombatActive)
+
+                    Button("Wait") {
+                        world.perform(.wait)
+                    }
+                    .keyboardShortcut("r", modifiers: [])
+                    .disabled(!viewModel.isCombatActive)
                 }
             }
         }

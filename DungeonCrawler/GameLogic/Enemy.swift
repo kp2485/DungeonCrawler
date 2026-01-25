@@ -7,20 +7,36 @@
 
 import Foundation
 
-final class Enemy {
+final class Enemy: Combatant {
     let position: Coordinate
     let heading: CompassDirection = .east
-    private var cooldownExpires = Date()
-    static let cooldown: TimeInterval = 1
-    
-    init(position: Coordinate) {
+
+    let name = "Skeleton"
+    var currentHP: Int
+    var maxHP: Int { attributes.endurance * 2 }
+    var currentInitiative: Int = 0
+    let attributes: Attributes
+
+    init(position: Coordinate, attributes: Attributes = .random) {
         self.position = position
+        self.attributes = attributes
+        self.currentHP = attributes.endurance * 2
     }
-    
-    func attack(_ partyMember: PartyMember, at time: Date) {
-        if time >= cooldownExpires {
-            partyMember.takeDamage(1)
-            cooldownExpires = time.addingTimeInterval(Enemy.cooldown)
-        }
+
+    var isAlive: Bool {
+        currentHP > 0
+    }
+
+    func takeDamage(_ amount: Int) {
+        currentHP = max(0, currentHP - amount)
+    }
+
+    func rollInitiative() {
+        currentInitiative = rollDie(sides: 20) + attributes.speed
+    }
+
+    func attack(_ partyMember: PartyMember) {
+        // Simple attack logic
+        partyMember.takeDamage(1)
     }
 }

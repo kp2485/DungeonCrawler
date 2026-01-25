@@ -7,12 +7,12 @@
 
 final class PartyMembers {
     private let members = [
-        PartyMember(),
-        PartyMember(),
-        PartyMember(),
-        PartyMember()
+        PartyMember(name: "Hero"),
+        PartyMember(name: "Wizard"),
+        PartyMember(name: "Rogue"),
+        PartyMember(name: "Cleric"),
     ]
-    
+
     subscript(partyPosition: PartyPosition) -> PartyMember {
         switch partyPosition {
         case .frontLeft:
@@ -25,11 +25,11 @@ final class PartyMembers {
             members[3]
         }
     }
-    
+
     var alivePartyMembers: [PartyMember] {
         members.filter { $0.isAlive }
     }
-    
+
     var allPartyMembers: [PartyMember] {
         members
     }
