@@ -70,4 +70,12 @@ struct PlayerMovementTests {
         
         #expect(player.heading == .west)
     }
+    
+    @Test("face west when turning counterclockwise once") func turnCounterclockwise() {
+        let player = Player()
+        
+        player.turnCounterclockwise()
+        
+        #expect(player.heading == .west)
+    }
 }
