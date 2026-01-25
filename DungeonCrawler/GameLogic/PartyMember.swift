@@ -9,18 +9,26 @@ final class PartyMember: Combatant {
     let name: String
     let title: String
     var currentHP: Int
+    var currentMana: Int
     var currentInitiative: Int = 0
-    let attributes: Attributes
+    var attributes: Attributes
+    let abilities: [Ability]
 
     var maxHP: Int {
         attributes.endurance * 2
+    }
+
+    var maxMana: Int {
+        attributes.wisdom * 2
     }
 
     init(character: MythologicalCharacter) {
         self.name = character.name
         self.title = character.title
         self.attributes = character.baseAttributes
+        self.abilities = character.abilities
         self.currentHP = character.baseAttributes.endurance * 2
+        self.currentMana = character.baseAttributes.wisdom * 2
     }
 
     func takeDamage(_ amount: Int) {

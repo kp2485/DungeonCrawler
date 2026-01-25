@@ -118,6 +118,23 @@ struct ContentView: View {
                     .keyboardShortcut("r", modifiers: [])
                     .disabled(!viewModel.isCombatActive)
                 }
+
+                // Ability Buttons
+                if viewModel.isCombatActive && !viewModel.activeAbilities.isEmpty {
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach(viewModel.activeAbilities, id: \.self) { ability in
+                                Button(ability.name) {
+                                    world.perform(.ability(ability))
+                                }
+                                .padding(4)
+                                .background(Color.blue)
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
+                    .padding()
+                }
             }
         }
     }

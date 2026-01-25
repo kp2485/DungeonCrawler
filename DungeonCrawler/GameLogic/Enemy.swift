@@ -15,7 +15,7 @@ final class Enemy: Combatant {
     var currentHP: Int
     var maxHP: Int { attributes.endurance * 2 }
     var currentInitiative: Int = 0
-    let attributes: Attributes
+    var attributes: Attributes
 
     init(position: Coordinate, attributes: Attributes = .random) {
         self.position = position

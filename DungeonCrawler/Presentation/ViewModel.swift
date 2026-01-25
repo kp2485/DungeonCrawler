@@ -19,6 +19,7 @@ final class ViewModel: ObservableObject {
     @Published var isCombatActive: Bool = false
     @Published var turnQueue: [String] = []  // Just names for now for the UI
     @Published var activeCombatantName: String?
+    @Published var activeAbilities: [Ability] = []
 
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
@@ -49,7 +50,7 @@ final class ViewModel: ObservableObject {
             isCombatActive = world.isCombatActive
         }
 
-        // Ideally we only map this when it changes, but for now every frame is fine for prototype
+        // Ideally we only map this only when it changes, but for now every frame is fine for prototype
         if isCombatActive {
             let newQueue = world.turnQueue.map { "\($0.name) (Init: \($0.currentInitiative))" }
             if turnQueue != newQueue {
@@ -60,10 +61,19 @@ final class ViewModel: ObservableObject {
                 if activeCombatantName != active.name {
                     activeCombatantName = active.name
                 }
+
+                if let pm = active as? PartyMember {
+                    if activeAbilities != pm.abilities {
+                        activeAbilities = pm.abilities
+                    }
+                } else if !activeAbilities.isEmpty {
+                    activeAbilities = []
+                }
             }
         } else {
             if !turnQueue.isEmpty { turnQueue = [] }
             activeCombatantName = nil
+            if !activeAbilities.isEmpty { activeAbilities = [] }
         }
     }
 }
@@ -114,10 +124,20 @@ struct PartyStats {
 }
 
 struct PartyMemberStats {
+    let name: String
+    let title: String
     let currentHP: Int
+    let maxHP: Int
+    let currentMana: Int
+    let maxMana: Int
 
     init(partyMember: PartyMember) {
+        self.name = partyMember.name
+        self.title = partyMember.title
         self.currentHP = partyMember.currentHP
+        self.maxHP = partyMember.maxHP
+        self.currentMana = partyMember.currentMana
+        self.maxMana = partyMember.maxMana
     }
 }
 

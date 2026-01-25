@@ -205,6 +205,10 @@ final class World: ObservableObject {
             checkForEnemyContact()
         case .attack:
             performAttack()  // Can initiate combat? or just whack air
+        case .ability(let ability):
+            performAbility(ability)
+            // Ability use may provoke or reveal enemies
+            checkForEnemyContact()
         case .wait:
             break
         }
@@ -296,6 +300,72 @@ final class World: ObservableObject {
     private func turnPartyCounterClockwise() {
         partyHeading = partyHeading.rotatedCounterClockwise()
     }
+    func performAbility(_ ability: Ability) {
+        guard let caster = activeCombatant as? PartyMember else { return }
+
+        if caster.currentMana < ability.manaCost {
+            print("Not enough mana!")
+            return
+        }
+
+        caster.currentMana -= ability.manaCost
+        print("\(caster.name) uses \(ability.name)!")
+
+        switch ability.type {
+        case .damage:
+            // Single target in front
+            let targetPos = partyPosition + partyHeading.toCoordinate
+            if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
+                // Damage Calculation
+                // Power + Attribute Scaling
+                let scalingStat = caster.attributes[ability.attributeScaling]
+                let damage = ability.power + (scalingStat / 2)
+                enemy.takeDamage(damage)
+                print("Dealt \(damage) damage to \(enemy.name).")
+                if !enemy.isAlive { print("\(enemy.name) defeated!") }
+            } else {
+                print("No target!")
+            }
+
+        case .heal:
+            // Self heal for now
+            let scalingStat = caster.attributes[ability.attributeScaling]
+            let healAmount = ability.power + (scalingStat / 2)
+            caster.currentHP = min(caster.maxHP, caster.currentHP + healAmount)
+            print("Healed \(healAmount) HP.")
+
+        case .aoe:
+            let scalingStat = caster.attributes[ability.attributeScaling]
+            let damage = ability.power + (scalingStat / 2)
+            for enemy in enemies
+            where enemy.isAlive
+                && currentFloor.hasLineOfSight(from: partyPosition, to: enemy.position)
+            {
+                enemy.takeDamage(damage)
+                print("Hit \(enemy.name) for \(damage).")
+            }
+
+        case .buff:
+            // Boost attribute temporarily (or permanently for battle)
+            let boost = ability.power
+            caster.attributes[ability.attributeScaling] += boost
+            print("Boosted \(ability.attributeScaling) by \(boost).")
+
+        case .debuff:
+            let targetPos = partyPosition + partyHeading.toCoordinate
+            if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
+                let reduction = ability.power
+                var currentVal = enemy.attributes[ability.attributeScaling]
+                enemy.attributes[ability.attributeScaling] = max(1, currentVal - reduction)
+                print("Reduced enemy \(ability.attributeScaling) by \(reduction).")
+            }
+
+        case .utility:
+            print("Utility effect applied.")
+        }
+
+        endTurn()
+    }
 }
 
 enum WorldState {
@@ -310,6 +380,7 @@ enum PartyCommand {
     case turnCounterClockwise
     case turnClockwise
     case attack
+    case ability(Ability)
     case wait
 }
 
@@ -370,3 +441,4 @@ func makeWorld(_ floorStrings: [String]) -> World {
         return (startingPosition, enemies)
     }
 }
+
