@@ -12,8 +12,10 @@ import Testing
 struct PlayerMovementTests {
     @Test("movement in a specified direction gets to the expected coordinate", arguments: [
         (Direction.forward, Coordinate(x: 0, y: 1)),
-        (Direction.backwards, Coordinate(x: 0, y: -1))
-    ]) func PlayerMoveForward(testcase: (direction: Direction, expectedPosition: Coordinate)) {
+        (Direction.backwards, Coordinate(x: 0, y: -1)),
+        (Direction.left, Coordinate(x: -1, y: 0)),
+        (Direction.right, Coordinate(x: 1, y: 0))
+    ]) func movePlayerForward(testcase: (direction: Direction, expectedPosition: Coordinate)) {
         let player = Player()
         
         player.move(testcase.direction)
@@ -21,12 +23,23 @@ struct PlayerMovementTests {
         #expect(player.position == testcase.expectedPosition)
     }
     
-    @Test("move forward twice to get to coordinate (0,2)") func PlayerMoveForwardTwice() {
+    @Test("move forward twice to get to coordinate (0,2)") func movePlayerForwardTwice() {
         let player = Player()
         
         player.move(.forward)
         player.move(.forward)
         
         #expect(player.position == Coordinate(x:0, y:2))
+    }
+    
+    @Test("returns to initial position after moving forward, right, back and then left") func moveInACircle() {
+        let player = Player()
+        
+        player.move(.forward)
+        player.move(.right)
+        player.move(.backwards)
+        player.move(.left)
+        
+        #expect(player.position == Coordinate(x:0, y:0))
     }
 }
