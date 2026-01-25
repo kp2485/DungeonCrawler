@@ -43,3 +43,13 @@ struct PlayerMovementTests {
         #expect(player.position == Coordinate(x:0, y:0))
     }
 }
+
+@Suite("Player rotation should") struct PlayerRotationTests {
+    @Test("face east when it turns clockwise") func turnClockwiseOnce() {
+        let player = Player()
+        
+        player.turnClockwise()
+        
+        #expect(player.heading == .east)
+    }
+}

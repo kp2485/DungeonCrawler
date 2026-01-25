@@ -21,3 +21,10 @@ enum Direction {
         }
     }
 }
+
+enum CompassDirection {
+    case north
+    case south
+    case east
+    case west
+}
