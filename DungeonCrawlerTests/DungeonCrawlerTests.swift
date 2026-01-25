@@ -8,10 +8,13 @@
 import Testing
 @testable import DungeonCrawler
 
-struct DungeonCrawlerTests {
-
-    @Test func example() async throws {
-        // Write your test here and use APIs like `#expect(...)` to check expected conditions.
+@Suite("Player movement should")
+struct PlayerMovementTests {
+    @Test("move forward when we instruct the player to move forward") func PlayerMoveForward() {
+        let player = Player()
+        
+        player.move(.forward)
+        
+        #expect(player.position == Coordinate(x:0, y:1))
     }
-
 }

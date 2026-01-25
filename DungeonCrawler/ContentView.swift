@@ -6,16 +6,42 @@
 //
 
 import SwiftUI
+import RealityKit
 
 struct ContentView: View {
+    let world = World()
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        ZStack {
+            GameView(world: world)
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button("⤵️") {
+                        print("Turning left")
+                    }
+                    Button("⬆️") {
+                        world.moveForward()
+                    }
+                    Button("⤵️") {
+                        print("Turning right")
+                    }
+                }
+                HStack {
+                    Spacer()
+                    Button("⬅️") {
+                        print("Moving left")
+                    }
+                    Button("⬇️") {
+                        world.moveBackward()
+                    }
+                    Button("➡️") {
+                        print("Moving right")
+                    }
+                }
+            }
         }
-        .padding()
     }
 }
 
