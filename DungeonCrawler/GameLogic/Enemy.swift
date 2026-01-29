@@ -22,7 +22,8 @@ final class Enemy: Combatant, Identifiable {
     var currentMana: Int
     var maxMana: Int { attributes.wisdom * 2 }
     var level: Int = 1  // Added for scaling
-    var activeConditions: [CombatCondition] = []
+    var activeConditions: [ActiveCondition] = []
+    var cooldowns: [UUID: Int] = [:]
 
     // Combat State
     // var condition: CombatCondition = .normal // Removed in favor of activeConditions

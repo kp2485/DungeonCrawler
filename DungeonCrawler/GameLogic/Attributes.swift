@@ -93,7 +93,9 @@ protocol Combatant: AnyObject {
     func rollInitiative()
     var currentMana: Int { get set }
     var maxMana: Int { get }
-    var activeConditions: [CombatCondition] { get set }
+    var activeConditions: [ActiveCondition] { get set }
+
+    var cooldowns: [UUID: Int] { get set }
 
     func hasCondition(_ condition: CombatCondition) -> Bool
 
@@ -104,7 +106,20 @@ extension Combatant {
     // Default implementation for checking specific condition existence ignoring associated values for some cases if needed,
     // but for now strict equality is fine or we can add helper methods.
     func hasCondition(_ condition: CombatCondition) -> Bool {
-        return activeConditions.contains(condition)
+        return activeConditions.contains { $0.condition == condition }
+    }
+}
+
+struct ActiveCondition: Equatable, Codable, Identifiable {
+    var id: UUID = UUID()
+    let condition: CombatCondition
+    var duration: Int
+    let sourceID: UUID?
+
+    init(condition: CombatCondition, duration: Int, sourceID: UUID? = nil) {
+        self.condition = condition
+        self.duration = duration
+        self.sourceID = sourceID
     }
 }
 
@@ -112,8 +127,18 @@ enum CombatCondition: Equatable, Codable {
     case poison(Int)  // Damage per turn
     case asleep  // Skip turn, wakes on damage
     case paralyzed  // Skip turn, chance to wear off
+    case stunned  // Skip turn, 1 round (usually)
     case blind  // Accuracy penalty
     case silenced  // Cannot cast spells
+    case confused  // Random action/target
+    case frightened  // Cannot attack source or run away?
+    case charmed  // Cannot attack source
+    case slowed  // Speed reduced or action penalty
+    case hasted  // Speed increased or extra action
+    case regenerating(Int)  // Heal per turn
+    case burning(Int)  // Damage per turn (Fire)
+    case bleeding(Int)  // Damage per turn (Physical)
+
     case buff(AttributeType, Int)  // Attribute, Amount
     case debuff(AttributeType, Int)  // Attribute, Amount
     case defending  // Reduced damage taken until next turn
@@ -124,8 +149,17 @@ enum CombatCondition: Equatable, Codable {
         case .poison: return "Poison"
         case .asleep: return "Asleep"
         case .paralyzed: return "Paralyzed"
+        case .stunned: return "Stunned"
         case .blind: return "Blind"
         case .silenced: return "Silenced"
+        case .confused: return "Confused"
+        case .frightened: return "Frightened"
+        case .charmed: return "Charmed"
+        case .slowed: return "Slowed"
+        case .hasted: return "Hasted"
+        case .regenerating: return "Regenerating"
+        case .burning: return "Burning"
+        case .bleeding: return "Bleeding"
         case .buff(let attr, _): return "\(attr.rawValue.capitalized) Up"
         case .debuff(let attr, _): return "\(attr.rawValue.capitalized) Down"
         case .defending: return "Defending"
@@ -139,8 +173,17 @@ enum CombatCondition: Equatable, Codable {
         case (.poison(let a), .poison(let b)): return a == b
         case (.asleep, .asleep): return true
         case (.paralyzed, .paralyzed): return true
+        case (.stunned, .stunned): return true
         case (.blind, .blind): return true
         case (.silenced, .silenced): return true
+        case (.confused, .confused): return true
+        case (.frightened, .frightened): return true
+        case (.charmed, .charmed): return true
+        case (.slowed, .slowed): return true
+        case (.hasted, .hasted): return true
+        case (.regenerating(let a), .regenerating(let b)): return a == b
+        case (.burning(let a), .burning(let b)): return a == b
+        case (.bleeding(let a), .bleeding(let b)): return a == b
         case (.buff(let a1, let v1), .buff(let a2, let v2)): return a1 == a2 && v1 == v2
         case (.debuff(let a1, let v1), .debuff(let a2, let v2)): return a1 == a2 && v1 == v2
         case (.defending, .defending): return true

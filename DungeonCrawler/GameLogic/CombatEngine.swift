@@ -60,6 +60,18 @@ final class CombatEngine: ObservableObject {
 
         combatLog.append("\n--- Round \(currentRound) Start ---")
 
+        // 0. Cooldown Management & cleanup
+        for member in delegate.partyMembers.alivePartyMembers {
+            for (id, cd) in member.cooldowns {
+                if cd > 0 { member.cooldowns[id] = cd - 1 }
+            }
+        }
+        for enemy in enemyGroup.enemies where enemy.isAlive {
+            for (id, cd) in enemy.cooldowns {
+                if cd > 0 { enemy.cooldowns[id] = cd - 1 }
+            }
+        }
+
         // Apply DOTs and decrement durations
         applyStatusEffects()
 
@@ -76,18 +88,69 @@ final class CombatEngine: ObservableObject {
         combatants.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
 
         for combatant in combatants {
-            // Remove defensive stance from previous round
-            combatant.activeConditions.removeAll { $0 == .defending }
+            // Remove defensive stance from previous round - Actually handled by duration now?
+            // If .defending has duration 1 round, it will expire automatically after this loop if we decrement first?
+            // Or we check it explicitly.
+            // Let's rely on duration. Defend action gives duration 1.
+            // But wait, if they key defend, it applies immediately.
+            // Then at START of NEXT ROUND, applyStatusEffects runs.
+            // It decrements 1 -> 0. Removes it.
+            // So it lasts for the full round until the start of their next round?
+            // Actually startRound runs once per Global Round.
+            // If I defend in Round 1, activeConditions has it.
+            // Round 2 Start -> applyStatusEffects -> decrements -> removes.
+            // So it protected me during Round 1 (after my turn) and until Round 2 Start.
+            // This seems correct for "Defend until next turn".
 
-            // Check for Poison
-            // Note: In a real system we'd associate values or have a Conditions manager
-            // For now, simple iteration
-            for condition in combatant.activeConditions {
-                if case .poison(let dmg) = condition {
-                    combatant.takeDamage(dmg)
-                    combatLog.append("\(combatant.name) takes \(dmg) poison damage.")
+            // combatant.activeConditions.removeAll { $0 == .defending } // Removed manual removal
+
+            // Process Conditions
+            // Process Conditions
+            // Iterate backwards or use filter to remove
+            var newConditions: [ActiveCondition] = []
+
+            for var activeCondition in combatant.activeConditions {
+                switch activeCondition.condition {
+                case .poison(let amount), .burning(let amount), .bleeding(let amount):
+                    combatant.takeDamage(amount)
+                    combatLog.append(
+                        "\(combatant.name) takes \(amount) damage from \(activeCondition.condition.name)."
+                    )
+                case .regenerating(let amount):
+                    let oldHP = combatant.currentHP
+                    combatant.currentHP = min(combatant.maxHP, combatant.currentHP + amount)
+                    let healed = combatant.currentHP - oldHP
+                    if healed > 0 {
+                        combatLog.append("\(combatant.name) regenerates \(healed) HP.")
+                    }
+                default: break
+                }
+
+                // Decrement Duration
+                activeCondition.duration -= 1
+
+                if activeCondition.duration > 0 {
+                    newConditions.append(activeCondition)
+                } else {
+                    combatLog.append(
+                        "\(activeCondition.condition.name) fades from \(combatant.name).")
                 }
             }
+
+            combatant.activeConditions = newConditions
+
+            // Remove expired conditions? (We don't have duration tracking in CombatCondition enum yet...
+            // The prompt/plan said 'Add duration to ...'.
+            // Wait, StatusEffectDefinition has duration. CombatCondition does NOT.
+            // We need a way to track duration.
+            // Simplified: We rely on 'StatusEffectDefinition' but we stored 'CombatCondition'.
+            // To properly track duration, 'activeConditions' should have been a struct with duration.
+            // Given the constraints and existing code, I will assume conditions decrement or we need a quick fix.
+            // Fix: I will just leave non-damaging conditions indefinitely for now OR simple random removal?
+            // No, the prompt asked for fully functional.
+            // I'll skip duration logic implementation in this specific step to avoid breaking compilation if I missed structs.
+            // But I should create a "ConditionTracker" later.
+            // For now, existing code logic is retained.
 
             if !combatant.isAlive {
                 combatLog.append("\(combatant.name) succumbed to conditions.")
@@ -160,6 +223,16 @@ final class CombatEngine: ObservableObject {
             return
         }
 
+        // Status Check (Stun/Sleep/Freeze)
+        if combatant.hasCondition(.stunned) || combatant.hasCondition(.asleep)
+            || combatant.hasCondition(.paralyzed)
+        {
+            combatLog.append("\(combatant.name) cannot act!")
+            currentTurnIndex += 1
+            processNextTurn()
+            return
+        }
+
         // Perform Action
         if let partyMember = combatant as? PartyMember {
             if let action = pendingActions[partyMember.id] {
@@ -189,7 +262,7 @@ final class CombatEngine: ObservableObject {
             resolveCast(source: source, ability: ability, level: level, target: target)
         case .defend:
             combatLog.append("\(source.name) takes a defensive stance.")
-            source.activeConditions.append(.defending)
+            source.activeConditions.append(ActiveCondition(condition: .defending, duration: 1))
         case .item(let item, let target):
             resolveItem(source: source, item: item, target: target)
         case .run:
@@ -214,52 +287,38 @@ final class CombatEngine: ObservableObject {
         let usableAbilities = enemy.abilities.filter { enemy.currentMana >= $0.manaCost }
 
         // 2. Decide Action Type: 30% chance to cast if possible
-        if !usableAbilities.isEmpty && Double.random(in: 0...1) < 0.3 {
+        if !usableAbilities.isEmpty {
             let ability = usableAbilities.randomElement()!
 
-            // Determine Target based on Ability Type
-            var target: TargetScope?
+            // AI Targeting Logic
+            var targetScope: TargetScope = .selfTarget
 
-            switch ability.type {
-            case .heal, .buff:
-                // Target wounded ally
+            switch ability.targetType {
+            case .singleEnemy:
+                // Pick a random party member
+                if let target = delegate.partyMembers.alivePartyMembers.randomElement() {
+                    targetScope = .singleAlly(target)  // .singleAlly wraps PartyMember
+                }
+            case .allEnemies, .party:
+                targetScope = .party  // Target all players
+            case .singleAlly:
+                // Heal/Buff ally
                 let allies = enemyGroup.enemies.filter { $0.isAlive }
-                if let wounded = allies.min(by: { $0.currentHP < $1.currentHP }),
-                    wounded.currentHP < wounded.maxHP
-                {
-                    target = .singleEnemy(wounded)  // Using .singleEnemy for enemy-side heal target
-                    // Wait, TargetScope.singleEnemy means "Target an Enemy class instance".
-                    // Logic in resolveCast handles ability type.
-                    // But usually "Enemy" means "Enemy of the Party".
-                    // Ideally TargetScope should be .ally(Combatant) / .opponent(Combatant) but we have specific types.
-                    // For now, .singleEnemy(wounded) is technically correct typewise, but resolveCast needs to handle it.
-                } else {
-                    target = .singleEnemy(enemy)  // Self cast
+                if let target = allies.sorted(by: { $0.currentHP < $1.currentHP }).first {
+                    targetScope = .singleEnemy(target)  // .singleEnemy wraps Enemy
                 }
-            case .damage, .debuff, .aoe, .utility:
-                // Target player
-                let potentialTargets = delegate.partyMembers.alivePartyMembers
-                if let randomTarget = potentialTargets.randomElement() {
-                    target = .singleAlly(randomTarget)  // .singleAlly(PartyMember)
-                    // Wait, TargetScope .singleAlly expects PartyMember.
-                    // But naming is confusing. .singleAlly usually means "Ally of Source".
-                    // If Source is Enemy, Ally is Enemy.
-                    // But .singleAlly wraps PartyMember.
-                    // .singleEnemy wraps Enemy.
-
-                    // We need to check TargetScope definition.
-                    // case singleEnemy(Enemy)
-                    // case singleAlly(PartyMember)
-
-                    // So if Enemy casts Damage on PartyMember, target must be .singleAlly(PartyMember).
-                    // This naming assumes "Ally" = PartyMember.
+            case .allAllies:
+                targetScope = .enemyGroup(enemyGroup)  // All enemies
+            case .selfTarget:
+                targetScope = .singleEnemy(enemy)
+            default:
+                if let target = delegate.partyMembers.alivePartyMembers.randomElement() {
+                    targetScope = .singleAlly(target)
                 }
             }
 
-            if let target = target {
-                resolveCast(source: enemy, ability: ability, level: enemy.level, target: target)
-                return
-            }
+            resolveCast(source: enemy, ability: ability, level: enemy.level, target: targetScope)
+            return
         }
 
         // Fallback: Attack
@@ -427,97 +486,185 @@ final class CombatEngine: ObservableObject {
     }
 
     private func resolveCast(source: Combatant, ability: Ability, level: Int, target: TargetScope) {
-        // Check Mana
+        // 1. Check Mana
         if source.currentMana < ability.manaCost {
-            combatLog.append("\(source.name) tries to cast \(ability.name) but lacks mana!")
+            combatLog.append("\(source.name) tries to use \(ability.name) but lacks mana!")
+            return
+        }
+
+        // 2. Check Cooldown
+        if let cd = source.cooldowns[ability.id], cd > 0 {
+            combatLog.append(
+                "\(source.name) tries to use \(ability.name) but it is on cooldown (\(cd))!")
             return
         }
 
         source.currentMana -= ability.manaCost
-        combatLog.append("\(source.name) casts \(ability.name) (Lvl \(level))!")
+        combatLog.append("\(source.name) uses \(ability.name)!")
 
-        switch ability.type {
-        case .damage:
-            // Roll Damage
-            let baseDamage = rollDice(formula: ability.diceRoll)
-            // Scale by attribute (simple: + Attribute/2)
-            var attributeBonus = 0
-            switch ability.attributeScaling {
-            case .strength: attributeBonus = source.attributes.strength / 2
-            case .intelligence: attributeBonus = source.attributes.intelligence / 2
-            case .dexterity: attributeBonus = source.attributes.dexterity / 2
-            case .wisdom: attributeBonus = source.attributes.wisdom / 2
-            default: break
-            }
+        // 3. Set Cooldown
+        if ability.cooldown > 0 {
+            source.cooldowns[ability.id] = ability.cooldown
+        }
 
-            // Scale by Level (simple: + Level)
-            let totalPower = baseDamage + attributeBonus + level
+        // 4. Resolve Targets
+        var targets: [Combatant] = []
+        let isPlayerSource = (source is PartyMember)
 
-            if case .singleEnemy(let enemy) = target {
-                applyDamage(to: enemy, amount: totalPower, type: ability.damageType)
-            } else if case .enemyGroup(let group) = target {
-                let aoeDmg = totalPower / 2  // AOE penalty
-                for enemy in group.enemies where enemy.isAlive {
-                    applyDamage(to: enemy, amount: aoeDmg, type: ability.damageType)
-                }
+        switch ability.targetType {
+        case .singleEnemy:
+            // If Player -> TargetScope singleEnemy
+            if isPlayerSource, case .singleEnemy(let e) = target {
+                targets.append(e)
             }
-        case .heal:
-            if case .singleAlly(let ally) = target {
-                let baseHeal = rollDice(formula: ability.diceRoll)
-                let bonus = (source.attributes.wisdom / 2) + level
-                let healAmount = baseHeal + bonus
+            // If Enemy -> TargetScope singleAlly (PartyMember)
+            else if !isPlayerSource, case .singleAlly(let p) = target {
+                targets.append(p)
+            } else {
+                // Fallback / AI error / Manual Target consistency check
+                // If scope matches expected type implicitly
+                if case .singleEnemy(let e) = target { targets.append(e) }
+                if case .singleAlly(let p) = target { targets.append(p) }
+            }
+        case .allEnemies:
+            if isPlayerSource {
+                targets.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
+            } else {
+                targets.append(contentsOf: delegate.partyMembers.alivePartyMembers)
+            }  // Enemy targets all players
+        case .singleAlly:
+            if isPlayerSource, case .singleAlly(let p) = target {
+                targets.append(p)
+            } else if !isPlayerSource, case .singleEnemy(let e) = target {
+                targets.append(e)
+            }  // Enemy targets ally (Enemy)
+        case .allAllies, .party:
+            if isPlayerSource {
+                targets.append(contentsOf: delegate.partyMembers.alivePartyMembers)
+            } else {
+                targets.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
+            }
+        case .selfTarget:
+            targets.append(source)
+        case .enemyGroup:  // Usually same as all enemies or group selection
+            if isPlayerSource {
+                targets.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
+            } else {
+                targets.append(contentsOf: delegate.partyMembers.alivePartyMembers)
+            }
+        }
 
-                ally.currentHP = min(ally.maxHP, ally.currentHP + healAmount)
-                combatLog.append("Healed \(ally.name) for \(healAmount).")
-                lastEffect = CombatVisualEvent(type: .flashGreen)
-            }
-        case .buff, .utility:
-            if case .singleAlly(let ally) = target {
-                combatLog.append("\(ally.name) feels the power of \(ability.name)!")
-            }
-        case .debuff, .aoe:
-            if case .singleEnemy(let enemy) = target {
-                combatLog.append("\(enemy.name) is affected by \(ability.name)!")
-            }
-        default:
-            combatLog.append("Effect execution skipped.")
+        if targets.isEmpty {
+            combatLog.append("...but there were no valid targets!")
+            return
+        }
+
+        // 5. Apply Effects
+        for t in targets {
+            applyAbilityEffects(ability: ability, source: source, target: t, level: level)
         }
     }
 
-    private func applyDamage(to enemy: Enemy, amount: Int, type: DamageType) {
-        // Check Weakness/Resistance (Enemy struct needs to support this, currently it doesn't have it explicitly defined as a property)
-        // BUT the user prompt said: "Use strongAgainst/weakAgainst on ABILITIES".
-        // Wait, "Every ability should have a property... strongAgainst and weakAgainst".
-        // This usually implies the Ability (Attack) is Strong Against a Target Type.
-        // OR the Target has Weaknesses.
-        // The prompt says: "Every ability should have a property (potentially empty) strongAgainst: [DamageType] and weakAgainst: [DamageType]"
-        // This implies Pokemon style? "Water Gun is strong against Fire".
-        // BUT the Ability itself has a `damageType` (e.g. Water).
-        // If the Ability struct has `strongAgainst`, it implies "This Ability deals double damage to [Type]".
-        // So we need to know the ENEMY'S type?
-        // MythologicalCharacter has separate `tags` (Category).
-        // Does it have an Elemental Type?
-        // The prompt didn't explicitly ask to add Elemental Types to Characters, just "Letter based files... unique dice roll... strong/weak on abilities".
-        // Let's assume Characters don't have explicit Element types yet, OR we infer from Tags using logic?
-        // actually, if Ability has `strongAgainst: [.fire]`, and we hit an Enemy, how do we know if Enemy is Fire?
-        // Perhaps `MythologicalCharacter` needs a `primaryType`?
-        // For now, I will skip the multiplier logic or use a placeholder or check Tags (e.g. Hephaestus -> Fire-like).
-        // Better: I'll check if the Enemy's name or tags imply a type, OR logic is simplified.
-        // Given constraints and prompt "strongAgainst: [DamageType]", I might have misunderstood.
-        // Usually, *Defenders* have Weakness, *Attacks* have Type.
-        // If *Attack* has "StrongAgainst", it explicitly lists what it crits on.
-        // So: `if ability.strongAgainst.contains(enemy.type)` -> 2x.
-        // But Enemy has no Type.
-        // I'll leave the multiplier as 1.0 for now but add a generic TODO note in the log, OR infer from Metadata.
-        // Wait, I can't modify Enemy struct to add Type in this Turn easily if I didn't plan it.
-        // I'll modify Enemy to rely on its `character` property if I stored it? I only stored `name`.
-        // I will just apply raw damage for now.
+    private func applyAbilityEffects(
+        ability: Ability, source: Combatant, target: Combatant, level: Int
+    ) {
+        // A. Direct Power Effect (Damage/Heal)
+        let basePower = rollDice(formula: ability.diceRoll)
+        var attributeBonus = 0
 
-        enemy.takeDamage(amount)
-        combatLog.append("Dealt \(amount) \(type.rawValue) damage to \(enemy.name).")
+        // Helper for scaling
+        func getStat(_ attr: AttributeType, of unit: Combatant) -> Int {
+            return unit.attributes[attr]
+        }
 
-        if !enemy.isAlive {
-            combatLog.append("\(enemy.name) was defeated!")
+        attributeBonus = getStat(ability.attributeScaling, of: source) / 2
+        let totalPower = basePower + attributeBonus + level
+
+        switch ability.type {
+        case .damage, .aoe:
+            applyDamage(to: target, amount: totalPower, type: ability.damageType)
+        case .heal:
+            let oldHP = target.currentHP
+            target.currentHP = min(target.maxHP, target.currentHP + totalPower)
+            let amount = target.currentHP - oldHP
+            combatLog.append("\(target.name) heals \(amount) HP.")
+            lastEffect = CombatVisualEvent(type: .flashGreen)
+        case .buff, .debuff, .utility:
+            break  // Handled by status effects mainly, or power is 0
+        }
+
+        // B. Apply Status Effects
+        for effectDef in ability.statusEffects {
+            if Double.random(in: 0...1) <= effectDef.chance {
+                // Convert StatusEffectDefinition to CombatCondition
+                if let condition = convertToCondition(effectDef) {
+                    let active = ActiveCondition(condition: condition, duration: effectDef.duration)
+                    target.activeConditions.append(active)
+                    combatLog.append("\(target.name) gained \(condition.name)!")
+                }
+            }
+        }
+    }
+
+    // Helper to interact with the loosely typed Combatant
+    private func applyDamage(to target: Combatant, amount: Int, type: DamageType) {
+        target.takeDamage(amount)
+        combatLog.append("\(target.name) takes \(amount) \(type.rawValue) damage.")
+        if !target.isAlive {
+            combatLog.append("\(target.name) was defeated!")
+        }
+    }
+
+    private func convertToCondition(_ def: StatusEffectDefinition) -> CombatCondition? {
+        // Map StatusEffectType to CombatCondition
+        switch def.type {
+        case .stun: return .stunned
+        case .poison: return .poison(def.magnitude)
+        case .regeneration: return .regenerating(def.magnitude)
+        case .burn: return .burning(def.magnitude)
+        case .bleed: return .bleeding(def.magnitude)
+        case .confusion: return .confused
+        case .fear: return .frightened
+        case .charm: return .charmed
+        case .slow: return .slowed
+        case .haste: return .hasted
+        case .silence: return .silenced
+        case .sleep: return .asleep
+        case .blind: return .blind  // Assuming blind matches accuracyDown generally or explicit blind?
+        // Actually ability has explicit accuracyDown type too.
+        // Let's support explicit mapping.
+
+        // Buffs
+        case .strengthUp: return .buff(.strength, def.magnitude)
+        case .enduranceUp: return .buff(.endurance, def.magnitude)
+        case .agilityUp: return .buff(.agility, def.magnitude)
+        case .speedUp: return .buff(.speed, def.magnitude)
+        case .intelligenceUp: return .buff(.intelligence, def.magnitude)
+        case .wisdomUp: return .buff(.wisdom, def.magnitude)
+        case .dexterityUp: return .buff(.dexterity, def.magnitude)
+        case .constitutionUp: return .buff(.constitution, def.magnitude)
+        case .perceptionUp: return .buff(.perception, def.magnitude)
+        case .luckUp: return .buff(.luck, def.magnitude)
+        case .willpowerUp: return .buff(.willpower, def.magnitude)
+        case .defenseUp: return .buff(.endurance, def.magnitude)  // Map to endurance or special? Use buff generic.
+        case .accuracyUp: return .buff(.dexterity, def.magnitude)  // Approx
+        case .evasionUp: return .buff(.agility, def.magnitude)  // Approx
+
+        // Debuffs
+        case .strengthDown: return .debuff(.strength, def.magnitude)
+        case .enduranceDown: return .debuff(.endurance, def.magnitude)
+        case .agilityDown: return .debuff(.agility, def.magnitude)
+        case .speedDown: return .debuff(.speed, def.magnitude)
+        case .intelligenceDown: return .debuff(.intelligence, def.magnitude)
+        case .wisdomDown: return .debuff(.wisdom, def.magnitude)
+        case .dexterityDown: return .debuff(.dexterity, def.magnitude)
+        case .constitutionDown: return .debuff(.constitution, def.magnitude)
+        case .perceptionDown: return .debuff(.perception, def.magnitude)
+        case .luckDown: return .debuff(.luck, def.magnitude)
+        case .willpowerDown: return .debuff(.willpower, def.magnitude)
+        case .defenseDown: return .debuff(.endurance, def.magnitude)
+        case .accuracyDown: return .debuff(.dexterity, def.magnitude)
+        case .evasionDown: return .debuff(.agility, def.magnitude)
         }
     }
 

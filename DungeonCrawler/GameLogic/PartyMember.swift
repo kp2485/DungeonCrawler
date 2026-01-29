@@ -16,7 +16,8 @@ final class PartyMember: Combatant, Identifiable, Codable {
     var currentInitiative: Int = 0
     var attributes: Attributes
     let abilities: [Ability]
-    var activeConditions: [CombatCondition] = []
+    var activeConditions: [ActiveCondition] = []
+    var cooldowns: [UUID: Int] = [:]
     var inventory: [Item] = []
     var equippedWeapon: Weapon?
 
