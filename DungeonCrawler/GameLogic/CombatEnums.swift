@@ -2,7 +2,7 @@
 //  CombatEnums.swift
 //  DungeonCrawler
 //
-//  Created by Antigravity on 1/28/26.
+//  Created by Kyle Peterson on 1/28/26.
 //
 
 import Foundation

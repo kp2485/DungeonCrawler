@@ -2,7 +2,7 @@
 //  CombatEngine.swift
 //  DungeonCrawler
 //
-//  Created by Antigravity on 1/28/26.
+//  Created by Kyle Peterson on 1/28/26.
 //
 
 import Combine
@@ -315,23 +315,74 @@ final class CombatEngine: ObservableObject {
         let partyPosition = partyPosition(of: source)
         let inBackRow = (partyPosition == .backLeft || partyPosition == .backRight)
 
-        // Our constraint: Back Row Party members cannot use MELEE (unless they have ranged weapons; not implemented yet)
-        if inBackRow {
-            combatLog.append("\(source.name) is too far away to attack!")
+        // Get Weapon (or default Unarmed)
+        let weapon = source.equippedWeapon ?? Weapon.unarmed
+
+        // Ranged check (if we had ranged weapons, we'd check weapon.isRanged)
+        // For now, if back row and not ranged (assuming all melee for prototype), penalty or block?
+        // Let's say Unarmed/Melee cannot hit from back row.
+        // Future: Check weapon.range type
+        if inBackRow && weapon.motion != .shoot {
+            combatLog.append("\(source.name) is too far to use \(weapon.name)!")
             return
         }
 
         switch target {
         case .singleEnemy(let enemy):
             if enemy.isAlive {
-                combatLog.append("\(source.name) attacks \(enemy.name)!")
-                let dmg = max(
-                    1, (source.attributes.strength / 2) - (enemy.attributes.endurance / 4))
-                enemy.takeDamage(dmg)
-                combatLog.append("Hit for \(dmg) damage.")
-                if !enemy.isAlive {
-                    combatLog.append("\(enemy.name) was destroyed!")
+                // 1. Calculate Hit Chance
+                // Base 85% + (Dex * 2)% - (Enemy Speed/Agility * 1)% + Weapon Accuracy
+                // Simplified:
+                let hitChance =
+                    85 + (source.attributes.dexterity * 2) - (enemy.attributes.speed)
+                    + weapon.accuracyBonus
+                let roll = Int.random(in: 1...100)
+
+                // Crit Chance
+                let critChancePercent = (weapon.critChance * 100) + Double(source.attributes.luck)
+                let isCrit = Double.random(in: 0...100) < critChancePercent
+
+                // Log Motion
+                // "[Source] [Motion] [Weapon] at [Target]"
+                // e.g. "Conan swings Iron Sword at Skeleton"
+                var weaponNameFragment = weapon.name
+                if weapon.motion == .brawl {
+                    weaponNameFragment = "with their fists"
+                } else {
+                    weaponNameFragment = weapon.name
                 }
+
+                let motionText =
+                    "\(source.name) \(weapon.motion.rawValue) \(weaponNameFragment) at \(enemy.name)"
+
+                if roll <= hitChance {
+                    // Hit!
+                    var dmg = weapon.damage + (source.attributes.strength / 2)
+
+                    if isCrit {
+                        dmg *= 2
+                        combatLog.append("\(motionText) and CRITICALLY HITS!")
+                    } else {
+                        combatLog.append("\(motionText) and hits.")
+                    }
+
+                    // Defense mitigation?
+                    if enemy.hasCondition(.defending) {
+                        dmg /= 2
+                    }
+
+                    let finalDmg = max(1, dmg)
+                    enemy.takeDamage(finalDmg)
+                    combatLog.append("Dealt \(finalDmg) damage.")
+
+                    if !enemy.isAlive {
+                        combatLog.append("\(enemy.name) was destroyed!")
+                    }
+                } else {
+                    // Miss
+                    combatLog.append("\(motionText) but misses!")
+                }
+
             } else {
                 combatLog.append("\(source.name) attacks a corpse.")
             }

@@ -18,6 +18,7 @@ final class PartyMember: Combatant, Identifiable, Codable {
     let abilities: [Ability]
     var activeConditions: [CombatCondition] = []
     var inventory: [Item] = []
+    var equippedWeapon: Weapon?
 
     var maxHP: Int {
         attributes.endurance * 2
