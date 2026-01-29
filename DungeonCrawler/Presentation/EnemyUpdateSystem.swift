@@ -7,6 +7,7 @@
 
 import RealityKit
 import SwiftUI
+import CoreGraphics
 
 class EnemyUpdateSystem: System {
     var world: World!
@@ -70,9 +71,50 @@ class EnemyUpdateSystem: System {
             return texture
         }
         
-        let textureResource = try! TextureResource.load(named: name)
+        let textureResource: TextureResource
+        if let loaded = try? TextureResource.load(named: name) {
+            textureResource = loaded
+        } else {
+            // RealityKit doesn't provide a checkerboard generator; use a solid color as a placeholder.
+            if let placeholder = try? Self.makeSolidColorTexture(CGColor(gray: 0.5, alpha: 1.0)) {
+                textureResource = placeholder
+            } else {
+                // Fallback: create a 1x1 white pixel if gray fails for any reason
+                textureResource = (try? Self.makeSolidColorTexture(CGColor(gray: 1.0, alpha: 1.0))) ?? (try! TextureResource.load(named: name))
+            }
+        }
         let texture = MaterialParameters.Texture(textureResource)
         textureCache[name] = texture
+        return texture
+    }
+    
+    private static func makeSolidColorTexture(_ color: CGColor, size: CGSize = CGSize(width: 1, height: 1)) throws -> TextureResource {
+        let width = Int(max(1, size.width))
+        let height = Int(max(1, size.height))
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bytesPerPixel = 4
+        let bytesPerRow = width * bytesPerPixel
+        let bitsPerComponent = 8
+        var data = Data(count: height * bytesPerRow)
+        let result = data.withUnsafeMutableBytes { (ptr: UnsafeMutableRawBufferPointer) -> TextureResource? in
+            guard let context = CGContext(data: ptr.baseAddress,
+                                          width: width,
+                                          height: height,
+                                          bitsPerComponent: bitsPerComponent,
+                                          bytesPerRow: bytesPerRow,
+                                          space: colorSpace,
+                                          bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+                return nil
+            }
+            context.setFillColor(color)
+            context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+            guard let cgImage = context.makeImage() else { return nil }
+            let options = TextureResource.CreateOptions(semantic: .color)
+            return try? TextureResource(image: cgImage, options: options)
+        }
+        guard let texture = result else {
+            throw NSError(domain: "EnemyUpdateSystem", code: -1, userInfo: [NSLocalizedDescriptionKey: "Failed to create CGImage for solid color texture"]) 
+        }
         return texture
     }
     
@@ -107,3 +149,4 @@ class EnemyUpdateSystem: System {
         return textureName
     }
 }
+

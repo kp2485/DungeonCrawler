@@ -16,6 +16,8 @@ final class PartyMember: Combatant, Identifiable, Codable {
     var currentInitiative: Int = 0
     var attributes: Attributes
     let abilities: [Ability]
+    var activeConditions: [CombatCondition] = []
+    var inventory: [Item] = []
 
     var maxHP: Int {
         attributes.endurance * 2
@@ -23,6 +25,24 @@ final class PartyMember: Combatant, Identifiable, Codable {
 
     var maxMana: Int {
         attributes.wisdom * 2
+    }
+
+    var currentXP: Int = 0
+    var nextLevelXP: Int = 100  // Simplified
+
+    func addXP(_ amount: Int) {
+        currentXP += amount
+        // Simple level up logic
+        while currentXP >= nextLevelXP {
+            currentXP -= nextLevelXP
+            nextLevelXP = Int(Double(nextLevelXP) * 1.5)
+            // Ideally increase stats here
+            attributes.strength += 1
+            attributes.endurance += 1
+            // maxHP = attributes.endurance * 2  // Force update if needed or just use computed
+            currentHP = maxHP
+            // Log this? CombatEngine handles logs.
+        }
     }
 
     init(character: MythologicalCharacter) {

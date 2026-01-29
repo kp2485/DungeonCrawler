@@ -26,7 +26,7 @@ struct ContentView: View {
             ######
             #....#
             #....#
-            ###..#
+            #.#..#
             #>#..#
             #T...#
             ######
@@ -110,25 +110,24 @@ struct ContentView: View {
                     }
 
                     // Command Buttons (Grid)
-                    HStack(alignment: .top, spacing: 8) {
-                        // Combat Commands
-                        VStack(spacing: 4) {
-                            GoldButton(label: "FIGHT") { world.perform(.attack) }
-                                .disabled(!viewModel.isCombatActive)
-                            GoldButton(label: "PARRY") { world.perform(.wait) }  // Wait as Parry
-                            GoldButton(label: "SPELL") { /* Open Magic Menu */  }
-                                .disabled(!viewModel.isCombatActive)
-                        }
+                    if viewModel.isCombatActive {
+                        CombatView(viewModel: viewModel)
+                    } else {
+                        HStack(alignment: .top, spacing: 8) {
+                            // Exploration / Interaction
+                            VStack(spacing: 4) {
+                                GoldButton(label: "MOVE") { /* Toggle Move Mode */  }
+                                GoldButton(label: "LOOK") { /* Inspect */  }
+                                GoldButton(label: "CAMP") { /* Rest */  }
+                                // Trigger combat debug
+                                GoldButton(label: "TEST") {
+                                    // Trigger random combat manually
+                                    let enemy = Enemy(position: world.partyPosition)
+                                    world.startCombat(with: enemy)
+                                }
+                            }
 
-                        // Exploration / Interaction
-                        VStack(spacing: 4) {
-                            GoldButton(label: "MOVE") { /* Toggle Move Mode */  }
-                            GoldButton(label: "LOOK") { /* Inspect */  }
-                            GoldButton(label: "CAMP") { /* Rest */  }
-                        }
-
-                        // Movement (Mini-pad)
-                        if !viewModel.isCombatActive {
+                            // Movement (Mini-pad)
                             VStack(spacing: 2) {
                                 GoldButton(label: "▲", small: true) {
                                     world.perform(.move(direction: .forward))
@@ -146,8 +145,8 @@ struct ContentView: View {
                                 }
                             }
                         }
+                        .padding(8)
                     }
-                    .padding(8)
                 }
                 .background(StoneBackground())
             }
@@ -163,9 +162,9 @@ struct ContentView: View {
             .background(StoneBackground())
         }
         .edgesIgnoringSafeArea(.all)
-#if os(iOS) || os(tvOS)
-        .statusBar(hidden: true)
-#endif
+        #if os(iOS) || os(tvOS)
+            .statusBar(hidden: true)
+        #endif
     }
 }
 

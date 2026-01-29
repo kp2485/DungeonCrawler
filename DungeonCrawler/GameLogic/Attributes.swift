@@ -82,6 +82,7 @@ func rollDie(sides: Int) -> Int {
 }
 
 protocol Combatant: AnyObject {
+    var id: UUID { get }
     var name: String { get }
     var currentHP: Int { get set }
     var maxHP: Int { get }
@@ -90,5 +91,61 @@ protocol Combatant: AnyObject {
     var isAlive: Bool { get }
 
     func rollInitiative()
+    var currentMana: Int { get set }
+    var maxMana: Int { get }
+    var activeConditions: [CombatCondition] { get set }
+
+    func hasCondition(_ condition: CombatCondition) -> Bool
+
     func takeDamage(_ amount: Int)
+}
+
+extension Combatant {
+    // Default implementation for checking specific condition existence ignoring associated values for some cases if needed,
+    // but for now strict equality is fine or we can add helper methods.
+    func hasCondition(_ condition: CombatCondition) -> Bool {
+        return activeConditions.contains(condition)
+    }
+}
+
+enum CombatCondition: Equatable, Codable {
+    case poison(Int)  // Damage per turn
+    case asleep  // Skip turn, wakes on damage
+    case paralyzed  // Skip turn, chance to wear off
+    case blind  // Accuracy penalty
+    case silenced  // Cannot cast spells
+    case buff(AttributeType, Int)  // Attribute, Amount
+    case debuff(AttributeType, Int)  // Attribute, Amount
+    case defending  // Reduced damage taken until next turn
+    case dead  // HP <= 0
+
+    var name: String {
+        switch self {
+        case .poison: return "Poison"
+        case .asleep: return "Asleep"
+        case .paralyzed: return "Paralyzed"
+        case .blind: return "Blind"
+        case .silenced: return "Silenced"
+        case .buff(let attr, _): return "\(attr.rawValue.capitalized) Up"
+        case .debuff(let attr, _): return "\(attr.rawValue.capitalized) Down"
+        case .defending: return "Defending"
+        case .dead: return "Dead"
+        }
+    }
+
+    // Equatable conformance for associated values
+    static func == (lhs: CombatCondition, rhs: CombatCondition) -> Bool {
+        switch (lhs, rhs) {
+        case (.poison(let a), .poison(let b)): return a == b
+        case (.asleep, .asleep): return true
+        case (.paralyzed, .paralyzed): return true
+        case (.blind, .blind): return true
+        case (.silenced, .silenced): return true
+        case (.buff(let a1, let v1), .buff(let a2, let v2)): return a1 == a2 && v1 == v2
+        case (.debuff(let a1, let v1), .debuff(let a2, let v2)): return a1 == a2 && v1 == v2
+        case (.defending, .defending): return true
+        case (.dead, .dead): return true
+        default: return false
+        }
+    }
 }

@@ -21,6 +21,11 @@ final class ViewModel: ObservableObject {
     @Published var activeCombatantName: String?
     @Published var activeAbilities: [Ability] = []
     @Published var gameLog: [String] = []
+    
+    // Combat UI State
+    @Published var currentSelectionMember: PartyMember?
+    @Published var availableEnemies: [Enemy] = []
+    @Published var availablePartyMembers: [PartyMember] = []
 
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
@@ -69,12 +74,27 @@ final class ViewModel: ObservableObject {
                 turnQueue = newQueue
             }
 
-            // Active Combatant
-            if let active = engine.activeCombatant {
+            // Active Combatant (Execution) or Selecting Member (Selection)
+            if let selecting = engine.currentSelectionMember {
+                if currentSelectionMember?.id != selecting.id {
+                    currentSelectionMember = selecting
+                    activeCombatantName = "Choosing: \(selecting.name)"
+                    activeAbilities = selecting.abilities
+                }
+                
+                // Update targets while selecting
+                if availableEnemies.map({ $0.id }) != engine.enemyGroup.enemies.map({ $0.id }) {
+                    availableEnemies = engine.enemyGroup.enemies
+                }
+                if availablePartyMembers.map({ $0.id }) != engine.delegate.partyMembers.allPartyMembers.map({ $0.id }) {
+                    availablePartyMembers = engine.delegate.partyMembers.allPartyMembers
+                }
+            } else if let active = engine.activeCombatant {
+                // Not selecting: show active combatant
+                currentSelectionMember = nil
                 if activeCombatantName != active.name {
                     activeCombatantName = active.name
                 }
-
                 if let pm = active as? PartyMember {
                     if activeAbilities != pm.abilities {
                         activeAbilities = pm.abilities
@@ -82,9 +102,19 @@ final class ViewModel: ObservableObject {
                 } else {
                     activeAbilities = []
                 }
+                
+                // Update targets while executing
+                if availableEnemies.map({ $0.id }) != engine.enemyGroup.enemies.map({ $0.id }) {
+                    availableEnemies = engine.enemyGroup.enemies
+                }
+                if availablePartyMembers.map({ $0.id }) != engine.delegate.partyMembers.allPartyMembers.map({ $0.id }) {
+                    availablePartyMembers = engine.delegate.partyMembers.allPartyMembers
+                }
             } else {
+                // Neither selecting nor active combatant
                 activeCombatantName = nil
                 activeAbilities = []
+                currentSelectionMember = nil
             }
 
         } else {

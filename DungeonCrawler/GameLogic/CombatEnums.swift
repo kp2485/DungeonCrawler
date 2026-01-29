@@ -29,7 +29,7 @@ enum CombatAction {
     case attack(target: TargetScope)
     case cast(ability: Ability, powerLevel: Int, target: TargetScope)
     case defend
-    case item  // Placeholder for now
+    case item(item: Item, target: TargetScope)
     case run
     case wait  // For skips
 }

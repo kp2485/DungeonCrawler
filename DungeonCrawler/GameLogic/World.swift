@@ -9,7 +9,7 @@ import Combine
 import Foundation
 import SwiftUI
 
-final class World: ObservableObject {
+final class World: ObservableObject, CombatDelegate {
     @Published private(set) var partyPosition: Coordinate
     @Published private(set) var partyHeading: CompassDirection
     @Published private(set) var currentFloorIndex = 0
@@ -66,33 +66,7 @@ final class World: ObservableObject {
     }
 
     func update(at time: Date) {
-        if !isCombatActive {
-            checkForEnemyContact()
-        }
-    }
-
-    func checkForEnemyContact() {
-        for enemy in enemies where enemy.isAlive {
-            if currentFloor.hasLineOfSight(from: enemy.position, to: partyPosition) {
-                if enemy.position == partyPosition || isFacing(enemy: enemy, target: partyPosition)
-                {
-                    print("Encounter started!")
-                    startCombat(with: enemy)
-                    return
-                }
-            }
-        }
-    }
-
-    private func isFacing(enemy: Enemy, target: Coordinate) -> Bool {
-        let dx = target.x - enemy.position.x
-        let dy = target.y - enemy.position.y
-        switch enemy.heading {
-        case .north: return dy < 0
-        case .south: return dy > 0
-        case .east: return dx > 0
-        case .west: return dx < 0
-        }
+        // No per-frame update needed for turn-based movement right now
     }
 
     func startCombat(with enemy: Enemy) {
@@ -101,17 +75,20 @@ final class World: ObservableObject {
         // Later: "3x Skeletons"
         let group = EnemyGroup(enemies: [enemy], name: enemy.name)
 
-        self.combatEngine = CombatEngine(world: self, enemyGroup: group)
+        self.combatEngine = CombatEngine(delegate: self, enemyGroup: group)
         log("Combat started with \(group.name)!")
     }
 
-    func endCombat(won: Bool) {
+    func endCombat(result: CombatResult) {
         self.combatEngine = nil
-        if won {
+        switch result {
+        case .victory:
             log("Victory!")
-        } else {
+        case .defeat:
             log("Defeat...")
-            // trigger lose state
+        // trigger lose state
+        case .escaped:
+            log("Escaped combat!")
         }
     }
 
@@ -120,8 +97,28 @@ final class World: ObservableObject {
         // or forwards them if we want to allow running via movement keys?
         // For now, blocks standard movement.
 
-        guard combatEngine == nil else {
-            print("In combat, use CombatEngine commands.")
+        if let engine = combatEngine {
+            // Forward Combat Commands
+            // We need to map PartyCommand to CombatAction
+            // But PartyCommand is generic.
+            switch command {
+            case .attack:
+                // Default attack: Attack random or first?
+                // For prototype: Attack first alive enemy
+                if let target = engine.enemyGroup.enemies.first(where: { $0.isAlive }) {
+                    if let member = engine.currentSelectionMember {
+                        engine.selectAction(
+                            for: member, action: .attack(target: .singleEnemy(target)))
+                    }
+                }
+            case .wait:  // Parry/Defend
+                if let member = engine.currentSelectionMember {
+                    engine.selectAction(for: member, action: .defend)
+                }
+            // case .ability(let ability): ... handle spells later
+            default:
+                print("Invalid combat command or not implemented.")
+            }
             return
         }
 
@@ -130,17 +127,14 @@ final class World: ObservableObject {
         switch command {
         case .move(let direction):
             performMovement(direction)
-            checkForEnemyContact()
         case .turnCounterClockwise:
             turnPartyCounterClockwise()
-            checkForEnemyContact()
         case .turnClockwise:
             turnPartyClockwise()
-            checkForEnemyContact()
         case .wait:
             break
         default:
-            print("Command not supported out of combat or handled by UI directly.")
+            print("Command not supported out of combat.")
         }
     }
 
@@ -157,6 +151,36 @@ final class World: ObservableObject {
             partyPosition = newPosition
         default:
             partyPosition = newPosition
+            checkForRandomEncounter()
+        }
+    }
+
+    private func checkForRandomEncounter() {
+        // Simple random check: 20% chance
+        if Int.random(in: 1...100) <= 20 {
+            generateRandomEncounter()
+        }
+    }
+
+    private func generateRandomEncounter() {
+        // Pick 1-3 random enemies
+        let count = Int.random(in: 1...3)
+        var enemies: [Enemy] = []
+
+        for _ in 0..<count {
+            if let character = GreekPantheon.allCharacters.randomElement() {
+                enemies.append(Enemy(character: character, position: partyPosition))
+            }
+        }
+
+        if !enemies.isEmpty {
+            let names = enemies.map { $0.name }.joined(separator: ", ")
+            let groupName = "\(enemies.count)x Enemies (\(names))"
+            let group = EnemyGroup(enemies: enemies, name: groupName)
+
+            // Start combat
+            combatEngine = CombatEngine(delegate: self, enemyGroup: group)
+            log("Encountered \(groupName)!")
         }
     }
 
@@ -231,7 +255,6 @@ func makeWorld(_ floorStrings: [String]) -> World {
         for y in 0..<characterMatrix.count {
             for x in 0..<characterMatrix[y].count {
                 switch characterMatrix[y][x] {
-                case "e": enemies.append(Coordinate(x: x, y: y))
                 case "S": startingPosition = Coordinate(x: x, y: y)
                 default:
                     break

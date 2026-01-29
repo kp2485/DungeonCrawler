@@ -9,16 +9,24 @@ import Combine
 import Foundation
 
 final class CombatEngine: ObservableObject {
-    unowned let world: World
-    private let enemyGroup: EnemyGroup
+    unowned let delegate: CombatDelegate
+    let enemyGroup: EnemyGroup
 
     // Combat State
     @Published var phase: CombatPhase = .selection
-    @Published var currentRound: Int = 1
+    @Published var currentRound: Int = 0
     @Published var combatLog: [String] = []
 
     // Selection State
+    // Selection State
     var pendingActions: [UUID: CombatAction] = [:]  // PartyMember ID -> Action
+
+    // Who is currently selecting?
+    var selectionQueue: [PartyMember] = []
+
+    var currentSelectionMember: PartyMember? {
+        selectionQueue.first
+    }
 
     // Execution State
     var turnQueue: [Combatant] = []
@@ -29,33 +37,84 @@ final class CombatEngine: ObservableObject {
         return turnQueue[currentTurnIndex]
     }
 
-    init(world: World, enemyGroup: EnemyGroup) {
-        self.world = world
+    init(delegate: CombatDelegate, enemyGroup: EnemyGroup) {
+        self.delegate = delegate
         self.enemyGroup = enemyGroup
         print("Combat Started against \(enemyGroup.name)")
+        startRound()
+    }
+
+    func startRound() {
+        phase = .selection
+        currentRound += 1
+        pendingActions.removeAll()
+
+        // Prepare selection queue (alive members)
+        // Prepare selection queue (alive members)
+        selectionQueue = delegate.partyMembers.alivePartyMembers.sorted {
+            $0.attributes.speed > $1.attributes.speed
+        }
+
+        // Auto-select actions for dead members (shouldn't be in queue check, but safety)
+
+        combatLog.append("\n--- Round \(currentRound) Start ---")
+
+        // Apply DOTs and decrement durations
+        applyStatusEffects()
+
+        if selectionQueue.isEmpty {
+            // Everyone dead? Should be caught by battle end checks, but handle edge case
+            endRound()
+        }
+    }
+
+    // MARK: - Status Effects
+
+    private func applyStatusEffects() {
+        var combatants: [Combatant] = delegate.partyMembers.alivePartyMembers
+        combatants.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
+
+        for combatant in combatants {
+            // Remove defensive stance from previous round
+            combatant.activeConditions.removeAll { $0 == .defending }
+
+            // Check for Poison
+            // Note: In a real system we'd associate values or have a Conditions manager
+            // For now, simple iteration
+            for condition in combatant.activeConditions {
+                if case .poison(let dmg) = condition {
+                    combatant.takeDamage(dmg)
+                    combatLog.append("\(combatant.name) takes \(dmg) poison damage.")
+                }
+            }
+
+            if !combatant.isAlive {
+                combatLog.append("\(combatant.name) succumbed to conditions.")
+            }
+        }
     }
 
     // MARK: - Selection Phase
 
     func selectAction(for member: PartyMember, action: CombatAction) {
-        // In a real app we'd use ID, but for now object identity or name
-        // Assuming PartyMember has ID or we rely on the instance
-        // For this prototype, I'll store by Name if ID isn't available easily, strict mode says Member object
-        // Let's assume we can map Member -> Action.
-        // We'll use a simple dictionary with ObjectIdentifier or add ID to PartyMember later.
-        // For now, let's just assume we process them in order or store in a local dict by name.
+        // Confirm member is the current selector to prevent out-of-order
+        guard let current = currentSelectionMember, current.id == member.id else {
+            print(
+                "Ignoring action from \(member.name), waiting for \(currentSelectionMember?.name ?? "none")"
+            )
+            return
+        }
+
         pendingActions[member.id] = action
+        if !selectionQueue.isEmpty {
+            selectionQueue.removeFirst()
+        }
 
         checkSelectionComplete()
     }
 
     private func checkSelectionComplete() {
-        let aliveMembers = world.partyMembers.alivePartyMembers
-        let selectedCount = pendingActions.count
-
-        // If all alive members have selected an action
-        // In reality, we probably want a "Confirm" button, but for auto-flow:
-        if selectedCount >= aliveMembers.count {
+        if selectionQueue.isEmpty {
             startExecutionPhase()
         }
     }
@@ -64,10 +123,10 @@ final class CombatEngine: ObservableObject {
 
     func startExecutionPhase() {
         phase = .execution
-        combatLog.append("--- Round \(currentRound) ---")
+        combatLog.append("Executing actions...")
 
         // 1. Roll Initiatives
-        var combatants: [Combatant] = world.partyMembers.alivePartyMembers
+        var combatants: [Combatant] = delegate.partyMembers.alivePartyMembers
         combatants.append(contentsOf: enemyGroup.enemies.filter { $0.isAlive })
 
         for combatant in combatants {
@@ -100,6 +159,7 @@ final class CombatEngine: ObservableObject {
             return
         }
 
+        // Perform Action
         if let partyMember = combatant as? PartyMember {
             if let action = pendingActions[partyMember.id] {
                 perform(action, source: partyMember)
@@ -110,13 +170,14 @@ final class CombatEngine: ObservableObject {
             performEnemyTurn(enemy)
         }
 
-        // Check for battle end after every action
+        // Check for battle end
         if checkBattleEnd() { return }
 
-        // Small delay for UI or just continue
-        // In a real game loop we'd wait, here we just recurse effectively instantaneous
-        currentTurnIndex += 1
-        processNextTurn()
+        // Delay before next turn for "beat by beat" feel
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.currentTurnIndex += 1
+            self?.processNextTurn()
+        }
     }
 
     private func perform(_ action: CombatAction, source: PartyMember) {
@@ -126,28 +187,91 @@ final class CombatEngine: ObservableObject {
         case .cast(let ability, let level, let target):
             resolveCast(source: source, ability: ability, level: level, target: target)
         case .defend:
-            combatLog.append("\(source.name) defends.")
-        // Logic for defense buff
-        case .item:
-            combatLog.append("\(source.name) uses an item (Not Implemented).")
+            combatLog.append("\(source.name) takes a defensive stance.")
+            source.activeConditions.append(.defending)
+        case .item(let item, let target):
+            resolveItem(source: source, item: item, target: target)
         case .run:
             combatLog.append("\(source.name) tries to run!")
-        // Run logic
+            // Run Logic
+            // Simple probability: 50% + Speed Bonus
+            // For now, flat 50%
+            if Double.random(in: 0...1) < 0.5 {
+                combatLog.append("Got away safely!")
+                delegate.endCombat(result: .escaped)
+            } else {
+                combatLog.append("Couldn't escape!")
+            }
         case .wait:
             combatLog.append("\(source.name) waits.")
         }
     }
 
     private func performEnemyTurn(_ enemy: Enemy) {
+        // AI Logic
+        // 1. Check for usable abilities (Mana check)
+        let usableAbilities = enemy.abilities.filter { enemy.currentMana >= $0.manaCost }
+
+        // 2. Decide Action Type: 30% chance to cast if possible
+        if !usableAbilities.isEmpty && Double.random(in: 0...1) < 0.3 {
+            let ability = usableAbilities.randomElement()!
+
+            // Determine Target based on Ability Type
+            var target: TargetScope?
+
+            switch ability.type {
+            case .heal, .buff:
+                // Target wounded ally
+                let allies = enemyGroup.enemies.filter { $0.isAlive }
+                if let wounded = allies.min(by: { $0.currentHP < $1.currentHP }),
+                    wounded.currentHP < wounded.maxHP
+                {
+                    target = .singleEnemy(wounded)  // Using .singleEnemy for enemy-side heal target
+                    // Wait, TargetScope.singleEnemy means "Target an Enemy class instance".
+                    // Logic in resolveCast handles ability type.
+                    // But usually "Enemy" means "Enemy of the Party".
+                    // Ideally TargetScope should be .ally(Combatant) / .opponent(Combatant) but we have specific types.
+                    // For now, .singleEnemy(wounded) is technically correct typewise, but resolveCast needs to handle it.
+                } else {
+                    target = .singleEnemy(enemy)  // Self cast
+                }
+            case .damage, .debuff, .aoe, .utility:
+                // Target player
+                let potentialTargets = delegate.partyMembers.alivePartyMembers
+                if let randomTarget = potentialTargets.randomElement() {
+                    target = .singleAlly(randomTarget)  // .singleAlly(PartyMember)
+                    // Wait, TargetScope .singleAlly expects PartyMember.
+                    // But naming is confusing. .singleAlly usually means "Ally of Source".
+                    // If Source is Enemy, Ally is Enemy.
+                    // But .singleAlly wraps PartyMember.
+                    // .singleEnemy wraps Enemy.
+
+                    // We need to check TargetScope definition.
+                    // case singleEnemy(Enemy)
+                    // case singleAlly(PartyMember)
+
+                    // So if Enemy casts Damage on PartyMember, target must be .singleAlly(PartyMember).
+                    // This naming assumes "Ally" = PartyMember.
+                }
+            }
+
+            if let target = target {
+                resolveCast(source: enemy, ability: ability, level: enemy.level, target: target)
+                return
+            }
+        }
+
+        // Fallback: Attack
         // Simple AI: Attack random front row
         // If front row empty, attack back row
 
         // Get potential targets
-        let frontRow = [world.partyMembers[.frontLeft], world.partyMembers[.frontRight]].compactMap
-        { $0 }.filter { $0.isAlive }
-        let backRow = [world.partyMembers[.backLeft], world.partyMembers[.backRight]].compactMap {
-            $0
-        }.filter { $0.isAlive }
+        let frontRow = [delegate.partyMembers[.frontLeft], delegate.partyMembers[.frontRight]]
+            .compactMap { $0 }.filter { $0.isAlive }
+        let backRow = [delegate.partyMembers[.backLeft], delegate.partyMembers[.backRight]]
+            .compactMap {
+                $0
+            }.filter { $0.isAlive }
 
         let targets = !frontRow.isEmpty ? frontRow : backRow
 
@@ -166,11 +290,36 @@ final class CombatEngine: ObservableObject {
         }
     }
 
+    // MARK: - Helpers
+
+    private func partyPosition(of member: PartyMember) -> PartyPosition? {
+        // Attempt to find the member in any of the four party slots
+        if let frontLeft = delegate.partyMembers[.frontLeft], frontLeft.id == member.id {
+            return .frontLeft
+        }
+        if let frontRight = delegate.partyMembers[.frontRight], frontRight.id == member.id {
+            return .frontRight
+        }
+        if let backLeft = delegate.partyMembers[.backLeft], backLeft.id == member.id {
+            return .backLeft
+        }
+        if let backRight = delegate.partyMembers[.backRight], backRight.id == member.id {
+            return .backRight
+        }
+        return nil
+    }
+
     // MARK: - Action Resolution
 
     private func resolveAttack(source: PartyMember, target: TargetScope) {
-        // Verify Target Accessibility (Rank Check)
-        // For now, assume Selection UI filtered invalid targets
+        let partyPosition = partyPosition(of: source)
+        let inBackRow = (partyPosition == .backLeft || partyPosition == .backRight)
+
+        // Our constraint: Back Row Party members cannot use MELEE (unless they have ranged weapons; not implemented yet)
+        if inBackRow {
+            combatLog.append("\(source.name) is too far away to attack!")
+            return
+        }
 
         switch target {
         case .singleEnemy(let enemy):
@@ -191,9 +340,16 @@ final class CombatEngine: ObservableObject {
         }
     }
 
-    private func resolveCast(source: PartyMember, ability: Ability, level: Int, target: TargetScope)
-    {
+    private func resolveCast(source: Combatant, ability: Ability, level: Int, target: TargetScope) {
+        // Check Mana
+        if source.currentMana < ability.manaCost {
+            combatLog.append("\(source.name) tries to cast \(ability.name) but lacks mana!")
+            return
+        }
+
+        source.currentMana -= ability.manaCost
         combatLog.append("\(source.name) casts \(ability.name) (Lvl \(level))!")
+
         // Apply mana cost, scaling etc.
         // For prototype, simple damage
 
@@ -216,30 +372,92 @@ final class CombatEngine: ObservableObject {
                 ally.currentHP = min(ally.maxHP, ally.currentHP + heal)
                 combatLog.append("Healed \(ally.name) for \(heal).")
             }
+        case .buff, .utility:  // Grouping utility here for now
+            if case .singleAlly(let ally) = target {
+                // Simplified buff logic
+                // Ideally Ability needs to specify which Attribute to buff
+                // For now, let's just say "Strength" for War Cry-like buffs, or use description mapping
+                // This requires Ability to hold more data or hardcoded mapping.
+                // I will assume generic buff for now.
+                combatLog.append(
+                    "\(ally.name) feels stronger! (Buff not fully implemented in stats)")
+            }
+        case .debuff, .aoe:  // Grouping aoe here for now (should implement proper AOE)
+            if case .singleEnemy(let enemy) = target {
+                // Simplified debuff
+                combatLog.append("\(enemy.name) is weakened! (Debuff not fully implemented)")
+                // Example: Apply Poison if it was a poison spell
+                // source.activeConditions.append(.poison(5)) // Logic needs Ability -> Condition mapping
+            }
         default:
-            combatLog.append("Effect not implemented.")
+            combatLog.append("Effect not fully implemented.")
+        }
+    }
+
+    private func resolveItem(source: PartyMember, item: Item, target: TargetScope) {
+        if let index = source.inventory.firstIndex(where: { $0.id == item.id }) {
+            source.inventory.remove(at: index)
+        } else {
+            combatLog.append("\(source.name) fumbles for an item they don't have!")
+            return
+        }
+
+        combatLog.append("\(source.name) uses \(item.name).")
+
+        switch item.type {
+        case .potion:
+            if case .singleAlly(let ally) = target {
+                let heal = item.power
+                ally.currentHP = min(ally.maxHP, ally.currentHP + heal)
+                combatLog.append("Recovered \(heal) HP to \(ally.name).")
+            }
+        case .manaPotion:
+            if case .singleAlly(let ally) = target {
+                let amount = item.power
+                ally.currentMana = min(ally.maxMana, ally.currentMana + amount)
+                combatLog.append("Recovered \(amount) Mana to \(ally.name).")
+            }
+        case .revive:
+            combatLog.append("Revive not implemented.")
         }
     }
 
     // MARK: - Round End
 
     private func endRound() {
-        pendingActions.removeAll()
-        currentRound += 1
-        phase = .selection
-        combatLog.append("Round completed. Select actions.")
+        startRound()
     }
 
     private func checkBattleEnd() -> Bool {
         if !enemyGroup.isAlive {
             phase = .victory
-            combatLog.append("Victory! Gained 0 XP (TODO).")
+
+            // Calculate XP
+            // Assuming average of 10-20 XP per enemy for now, or based on stats
+            // Let's verify if Enemy has an XP property? No, so we estimate.
+            // 20 XP per enemy
+            let totalXP = enemyGroup.enemies.count * 20
+            combatLog.append("Victory! Gained \(totalXP) XP.")
+
+            // Award XP (Naive implementation, assume World handles it or we iterate)
+            for member in delegate.partyMembers.alivePartyMembers {
+                member.addXP(totalXP)
+                combatLog.append("\(member.name) gained \(totalXP) XP.")
+            }
+
+            // Delay cleanup to show victory message
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.delegate.endCombat(result: .victory)
+            }
             return true
         }
 
-        if world.partyMembers.alivePartyMembers.isEmpty {
+        if delegate.partyMembers.alivePartyMembers.isEmpty {
             phase = .defeat
             combatLog.append("Party was wiped out...")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.delegate.endCombat(result: .defeat)
+            }
             return true
         }
 
