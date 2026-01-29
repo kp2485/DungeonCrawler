@@ -21,6 +21,13 @@ final class PartyMember: Combatant, Identifiable, Codable {
     var inventory: [Item] = []
     var equippedWeapon: Weapon?
 
+    var sex: Sex
+    var gender: Gender
+    var professions: [Profession]
+
+    // Derived from professions or just name?
+    // let title: String // We can keep title as a stored property, initialized to Profession Name
+
     var maxHP: Int {
         attributes.endurance * 2
     }
@@ -47,13 +54,23 @@ final class PartyMember: Combatant, Identifiable, Codable {
         }
     }
 
-    init(character: MythologicalCharacter) {
-        self.name = character.name
-        self.title = character.title
-        self.attributes = character.baseAttributes
-        self.abilities = character.abilities
-        self.currentHP = character.baseAttributes.endurance * 2
-        self.currentMana = character.baseAttributes.wisdom * 2
+    init(name: String, sex: Sex, profession: Profession, attributes: Attributes) {
+        self.name = name
+        self.title = profession.name
+        self.sex = sex
+
+        // Default gender matches sex
+        switch sex {
+        case .male: self.gender = .male
+        case .female: self.gender = .female
+        case .hermaphrodite: self.gender = .hermaphrodite
+        }
+
+        self.professions = [profession]
+        self.attributes = attributes
+        self.abilities = profession.startingAbilities
+        self.currentHP = attributes.endurance * 2
+        self.currentMana = attributes.wisdom * 2
     }
 
     func takeDamage(_ amount: Int) {

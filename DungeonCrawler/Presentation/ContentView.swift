@@ -51,6 +51,8 @@ struct ContentView: View {
             VStack(spacing: 4) {
                 PartyMemberPortrait(stats: viewModel.partyStats[.frontLeft])
                 Spacer()
+                PartyMemberPortrait(stats: viewModel.partyStats[.middleLeft])
+                Spacer()
                 PartyMemberPortrait(stats: viewModel.partyStats[.backLeft])
             }
             .frame(width: sideColumnWidth)
@@ -169,6 +171,8 @@ struct ContentView: View {
             VStack(spacing: 4) {
                 PartyMemberPortrait(stats: viewModel.partyStats[.frontRight])
                 Spacer()
+                PartyMemberPortrait(stats: viewModel.partyStats[.middleRight])
+                Spacer()
                 PartyMemberPortrait(stats: viewModel.partyStats[.backRight])
             }
             .frame(width: sideColumnWidth)
@@ -206,47 +210,8 @@ struct ContentView: View {
 
 // MARK: - Components
 
-struct StoneBackground: View {
-    var body: some View {
-        Color(white: 0.2)
-            .overlay(
-                Image(systemName: "square.fill")  // Placeholder for texture
-                    .resizable()
-                    .opacity(0.1)
-                    .foregroundColor(.black)
-            )
-        // In a real app we'd use a tiled stone image asset
-    }
-}
-
-extension Color {
-    static let gold = Color(red: 0.8, green: 0.7, blue: 0.2)
-}
-
-struct GoldButton: View {
-    let label: String
-    var small: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            ZStack {
-                Rectangle()
-                    .fill(Color.gold)
-                    .overlay(
-                        Rectangle()
-                            .stroke(Color.white.opacity(0.5), lineWidth: 2)
-                    )
-                    .shadow(radius: 1, y: 1)
-
-                Text(label)
-                    .font(.system(size: small ? 12 : 14, weight: .bold, design: .monospaced))
-                    .foregroundColor(.black)
-            }
-            .frame(width: small ? 40 : 80, height: small ? 30 : 30)
-        }
-    }
-}
+// MARK: - Components
+// StoneBackground, Color.gold, and GoldButton moved to Styles.swift
 
 struct PartyMemberPortrait: View {
     let stats: PartyMemberStats

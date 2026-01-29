@@ -170,23 +170,20 @@ extension CompassDirection {
 }
 
 struct PartyStats {
-    let members: [PartyMemberStats]
+    let statsByPosition: [PartyPosition: PartyMemberStats]
 
     init(partyMembers: PartyMembers) {
-        members = partyMembers.allPartyMembers.map { PartyMemberStats(partyMember: $0) }
+        var stats: [PartyPosition: PartyMemberStats] = [:]
+        for position in PartyPosition.allCases {
+            if let member = partyMembers[position] {
+                stats[position] = PartyMemberStats(partyMember: member)
+            }
+        }
+        self.statsByPosition = stats
     }
 
     subscript(partyPosition: PartyPosition) -> PartyMemberStats {
-        switch partyPosition {
-        case .frontLeft:
-            members[0]
-        case .frontRight:
-            members[1]
-        case .backLeft:
-            members[2]
-        case .backRight:
-            members[3]
-        }
+        return statsByPosition[partyPosition] ?? PartyMemberStats.empty
     }
 }
 
@@ -206,6 +203,20 @@ struct PartyMemberStats {
         self.currentMana = partyMember.currentMana
         self.maxMana = partyMember.maxMana
     }
+
+    private init(
+        name: String, title: String, currentHP: Int, maxHP: Int, currentMana: Int, maxMana: Int
+    ) {
+        self.name = name
+        self.title = title
+        self.currentHP = currentHP
+        self.maxHP = maxHP
+        self.currentMana = currentMana
+        self.maxMana = maxMana
+    }
+
+    static let empty = PartyMemberStats(
+        name: "Empty", title: "", currentHP: 0, maxHP: 1, currentMana: 0, maxMana: 1)
 }
 
 extension PartyStats: Equatable {}

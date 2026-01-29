@@ -353,12 +353,18 @@ final class CombatEngine: ObservableObject {
     // MARK: - Helpers
 
     private func partyPosition(of member: PartyMember) -> PartyPosition? {
-        // Attempt to find the member in any of the four party slots
+        // Attempt to find the member in any of the six party slots
         if let frontLeft = delegate.partyMembers[.frontLeft], frontLeft.id == member.id {
             return .frontLeft
         }
         if let frontRight = delegate.partyMembers[.frontRight], frontRight.id == member.id {
             return .frontRight
+        }
+        if let middleLeft = delegate.partyMembers[.middleLeft], middleLeft.id == member.id {
+            return .middleLeft
+        }
+        if let middleRight = delegate.partyMembers[.middleRight], middleRight.id == member.id {
+            return .middleRight
         }
         if let backLeft = delegate.partyMembers[.backLeft], backLeft.id == member.id {
             return .backLeft
