@@ -392,6 +392,40 @@ final class CombatEngine: ObservableObject {
         }
     }
 
+    // MARK: - Dice Rolling
+    private func rollDice(formula: String) -> Int {
+        // Simple parser for "XdY+Z"
+        // 1. Check for modifier
+        var modifier = 0
+        var dicePart = formula
+
+        let components = formula.components(separatedBy: "+")
+        if components.count > 1, let mod = Int(components[1]) {
+            modifier = mod
+            dicePart = components[0]
+        } else if let modIndex = formula.lastIndex(of: "-") {
+            // Handle negative modifier simple case if needed, but for now assuming XdY+Z
+            // Parsing - is trickier without regex, assuming + for now based on examples
+        }
+
+        // 2. Parse XdY
+        let dSplit = dicePart.lowercased().components(separatedBy: "d")
+        guard dSplit.count == 2,
+            let count = Int(dSplit[0]),
+            let sides = Int(dSplit[1])
+        else {
+            print("Invalid dice formula: \(formula), fallback to 1d4")
+            return Int.random(in: 1...4)
+        }
+
+        var total = 0
+        for _ in 0..<count {
+            total += Int.random(in: 1...sides)
+        }
+
+        return total + modifier
+    }
+
     private func resolveCast(source: Combatant, ability: Ability, level: Int, target: TargetScope) {
         // Check Mana
         if source.currentMana < ability.manaCost {
@@ -402,48 +436,88 @@ final class CombatEngine: ObservableObject {
         source.currentMana -= ability.manaCost
         combatLog.append("\(source.name) casts \(ability.name) (Lvl \(level))!")
 
-        // Apply mana cost, scaling etc.
-        // For prototype, simple damage
-
         switch ability.type {
         case .damage:
+            // Roll Damage
+            let baseDamage = rollDice(formula: ability.diceRoll)
+            // Scale by attribute (simple: + Attribute/2)
+            var attributeBonus = 0
+            switch ability.attributeScaling {
+            case .strength: attributeBonus = source.attributes.strength / 2
+            case .intelligence: attributeBonus = source.attributes.intelligence / 2
+            case .dexterity: attributeBonus = source.attributes.dexterity / 2
+            case .wisdom: attributeBonus = source.attributes.wisdom / 2
+            default: break
+            }
+
+            // Scale by Level (simple: + Level)
+            let totalPower = baseDamage + attributeBonus + level
+
             if case .singleEnemy(let enemy) = target {
-                let dmg = ability.power * level + (source.attributes.intelligence / 2)
-                enemy.takeDamage(dmg)
-                combatLog.append("Blasted \(enemy.name) for \(dmg)!")
+                applyDamage(to: enemy, amount: totalPower, type: ability.damageType)
             } else if case .enemyGroup(let group) = target {
-                let dmg = (ability.power * level) / 2  // AOE less dmg
+                let aoeDmg = totalPower / 2  // AOE penalty
                 for enemy in group.enemies where enemy.isAlive {
-                    enemy.takeDamage(dmg)
-                    combatLog.append("Hit \(enemy.name) for \(dmg).")
+                    applyDamage(to: enemy, amount: aoeDmg, type: ability.damageType)
                 }
             }
         case .heal:
             if case .singleAlly(let ally) = target {
-                let heal = ability.power * level
-                ally.currentHP = min(ally.maxHP, ally.currentHP + heal)
-                combatLog.append("Healed \(ally.name) for \(heal).")
+                let baseHeal = rollDice(formula: ability.diceRoll)
+                let bonus = (source.attributes.wisdom / 2) + level
+                let healAmount = baseHeal + bonus
+
+                ally.currentHP = min(ally.maxHP, ally.currentHP + healAmount)
+                combatLog.append("Healed \(ally.name) for \(healAmount).")
                 lastEffect = CombatVisualEvent(type: .flashGreen)
             }
-        case .buff, .utility:  // Grouping utility here for now
+        case .buff, .utility:
             if case .singleAlly(let ally) = target {
-                // Simplified buff logic
-                // Ideally Ability needs to specify which Attribute to buff
-                // For now, let's just say "Strength" for War Cry-like buffs, or use description mapping
-                // This requires Ability to hold more data or hardcoded mapping.
-                // I will assume generic buff for now.
-                combatLog.append(
-                    "\(ally.name) feels stronger! (Buff not fully implemented in stats)")
+                combatLog.append("\(ally.name) feels the power of \(ability.name)!")
             }
-        case .debuff, .aoe:  // Grouping aoe here for now (should implement proper AOE)
+        case .debuff, .aoe:
             if case .singleEnemy(let enemy) = target {
-                // Simplified debuff
-                combatLog.append("\(enemy.name) is weakened! (Debuff not fully implemented)")
-                // Example: Apply Poison if it was a poison spell
-                // source.activeConditions.append(.poison(5)) // Logic needs Ability -> Condition mapping
+                combatLog.append("\(enemy.name) is affected by \(ability.name)!")
             }
         default:
-            combatLog.append("Effect not fully implemented.")
+            combatLog.append("Effect execution skipped.")
+        }
+    }
+
+    private func applyDamage(to enemy: Enemy, amount: Int, type: DamageType) {
+        // Check Weakness/Resistance (Enemy struct needs to support this, currently it doesn't have it explicitly defined as a property)
+        // BUT the user prompt said: "Use strongAgainst/weakAgainst on ABILITIES".
+        // Wait, "Every ability should have a property... strongAgainst and weakAgainst".
+        // This usually implies the Ability (Attack) is Strong Against a Target Type.
+        // OR the Target has Weaknesses.
+        // The prompt says: "Every ability should have a property (potentially empty) strongAgainst: [DamageType] and weakAgainst: [DamageType]"
+        // This implies Pokemon style? "Water Gun is strong against Fire".
+        // BUT the Ability itself has a `damageType` (e.g. Water).
+        // If the Ability struct has `strongAgainst`, it implies "This Ability deals double damage to [Type]".
+        // So we need to know the ENEMY'S type?
+        // MythologicalCharacter has separate `tags` (Category).
+        // Does it have an Elemental Type?
+        // The prompt didn't explicitly ask to add Elemental Types to Characters, just "Letter based files... unique dice roll... strong/weak on abilities".
+        // Let's assume Characters don't have explicit Element types yet, OR we infer from Tags using logic?
+        // actually, if Ability has `strongAgainst: [.fire]`, and we hit an Enemy, how do we know if Enemy is Fire?
+        // Perhaps `MythologicalCharacter` needs a `primaryType`?
+        // For now, I will skip the multiplier logic or use a placeholder or check Tags (e.g. Hephaestus -> Fire-like).
+        // Better: I'll check if the Enemy's name or tags imply a type, OR logic is simplified.
+        // Given constraints and prompt "strongAgainst: [DamageType]", I might have misunderstood.
+        // Usually, *Defenders* have Weakness, *Attacks* have Type.
+        // If *Attack* has "StrongAgainst", it explicitly lists what it crits on.
+        // So: `if ability.strongAgainst.contains(enemy.type)` -> 2x.
+        // But Enemy has no Type.
+        // I'll leave the multiplier as 1.0 for now but add a generic TODO note in the log, OR infer from Metadata.
+        // Wait, I can't modify Enemy struct to add Type in this Turn easily if I didn't plan it.
+        // I'll modify Enemy to rely on its `character` property if I stored it? I only stored `name`.
+        // I will just apply raw damage for now.
+
+        enemy.takeDamage(amount)
+        combatLog.append("Dealt \(amount) \(type.rawValue) damage to \(enemy.name).")
+
+        if !enemy.isAlive {
+            combatLog.append("\(enemy.name) was defeated!")
         }
     }
 

@@ -40,3 +40,21 @@ enum CombatPhase {
     case victory
     case defeat
 }
+
+enum DamageType: String, CaseIterable, Codable {
+    case physical
+    case fire
+    case cold
+    case lightning
+    case poison
+    case acid
+    case psychic
+    case necrotic
+    case radiant
+    case force
+    case water
+    case wind
+    case earth
+    case sonic
+    case nature
+}
