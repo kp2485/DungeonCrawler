@@ -1,6 +1,6 @@
 import Foundation
 
-enum AbilityType: String, Equatable {
+enum AbilityType: String, Equatable, Codable {
     case damage
     case heal
     case buff  // Increases stats temporarily
@@ -9,7 +9,7 @@ enum AbilityType: String, Equatable {
     case utility  // Special effects
 }
 
-struct Ability: Equatable, Hashable {
+struct Ability: Equatable, Hashable, Codable {
     let id = UUID()
     let name: String
     let description: String

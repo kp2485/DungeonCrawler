@@ -5,8 +5,9 @@
 //  Created by Maarten Engels on 22/02/2025.
 //
 
-import SwiftUI
+import Combine
 import RealityKit
+import SwiftUI
 
 struct GameView: NSViewRepresentable {
     let world: World

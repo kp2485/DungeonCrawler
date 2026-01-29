@@ -5,6 +5,7 @@
 //  Created by Maarten Engels on 22/02/2025.
 //
 
+import Combine
 import RealityKit
 import SwiftUI
 
@@ -48,21 +49,27 @@ class MapUpdateSystem: System {
         scene.addAnchor(mapAnchor!)
         currentRenderedFloor = world.currentFloor
 
-        for row in world.currentFloor.minY ... world.currentFloor.maxY {
-            for col in world.currentFloor.minX ... world.currentFloor.maxX {
+        for row in world.currentFloor.minY...world.currentFloor.maxY {
+            for col in world.currentFloor.minX...world.currentFloor.maxX {
                 let coordinate = Coordinate(x: col, y: row)
                 switch world.currentFloor.tileAt(coordinate) {
                 case .wall:
-                    mapAnchor?.addChild(placeModelAt(model: "Wall", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "Wall", worldPosition: coordinate.toSIMD3))
                 case .stairsUp:
-                    mapAnchor?.addChild(placeModelAt(model: "stairsUp", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "stairsUp", worldPosition: coordinate.toSIMD3))
                 case .stairsDown:
-                    mapAnchor?.addChild(placeModelAt(model: "stairsDown", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "stairsDown", worldPosition: coordinate.toSIMD3))
                 case .winTarget:
-                    mapAnchor?.addChild(placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
-                    mapAnchor?.addChild(placeModelAt(model: "target", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "target", worldPosition: coordinate.toSIMD3))
                 default:
-                    mapAnchor?.addChild(placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
                 }
             }
         }
@@ -73,7 +80,9 @@ class MapUpdateSystem: System {
         var cubeMaterial = SimpleMaterial(color: color, isMetallic: true)
         cubeMaterial.metallic = 0.2
         cubeMaterial.roughness = 0.7
-        let cubeEntity = Entity(components: [ModelComponent(mesh: .generateBox(size: 1), materials: [cubeMaterial])])
+        let cubeEntity = Entity(components: [
+            ModelComponent(mesh: .generateBox(size: 1), materials: [cubeMaterial])
+        ])
         let cubeAnchor = AnchorEntity(world: worldPosition)
         cubeAnchor.addChild(cubeEntity)
 

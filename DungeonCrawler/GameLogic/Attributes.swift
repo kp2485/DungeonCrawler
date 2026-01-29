@@ -1,7 +1,6 @@
-
 import Foundation
 
-enum AttributeType: String, CaseIterable {
+enum AttributeType: String, CaseIterable, Codable {
     case strength
     case endurance
     case agility
@@ -15,7 +14,7 @@ enum AttributeType: String, CaseIterable {
     case willpower
 }
 
-struct Attributes: Equatable {
+struct Attributes: Equatable, Codable {
     var strength: Int
     var endurance: Int
     var agility: Int
@@ -27,7 +26,7 @@ struct Attributes: Equatable {
     var perception: Int
     var luck: Int
     var willpower: Int
-    
+
     static var random: Attributes {
         return Attributes(
             strength: Int.random(in: 3...18),
@@ -43,7 +42,7 @@ struct Attributes: Equatable {
             willpower: Int.random(in: 3...18)
         )
     }
-    
+
     subscript(attribute: AttributeType) -> Int {
         get {
             switch attribute {
@@ -89,7 +88,7 @@ protocol Combatant: AnyObject {
     var attributes: Attributes { get }
     var currentInitiative: Int { get set }
     var isAlive: Bool { get }
-    
+
     func rollInitiative()
     func takeDamage(_ amount: Int)
 }

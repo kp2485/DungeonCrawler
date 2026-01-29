@@ -7,6 +7,7 @@
 
 final class PartyMembers {
     private let members: [PartyMember]
+    private(set) var formation: [PartyPosition: PartyMember] = [:]
 
     init() {
         let shuffledCharacters = GreekPantheon.allCharacters.shuffled()
@@ -14,21 +15,19 @@ final class PartyMembers {
         let selected = Array(shuffledCharacters.prefix(4))
 
         self.members = selected.map { PartyMember(character: $0) }
+
+        // Default Formation
+        if members.count > 0 { formation[.frontLeft] = members[0] }
+        if members.count > 1 { formation[.frontRight] = members[1] }
+        if members.count > 2 { formation[.backLeft] = members[2] }
+        if members.count > 3 { formation[.backRight] = members[3] }
     }
 
-    subscript(partyPosition: PartyPosition) -> PartyMember {
-        switch partyPosition {
-        case .frontLeft:
-            members[0]
-        case .frontRight:
-            members[1]
-        case .backLeft:
-            members[2]
-        case .backRight:
-            members[3]
-        }
+    subscript(partyPosition: PartyPosition) -> PartyMember? {
+        return formation[partyPosition]
     }
 
+    // Legacy support for array access if needed, but formation is source of truth for combat positions
     var alivePartyMembers: [PartyMember] {
         members.filter { $0.isAlive }
     }
@@ -38,9 +37,13 @@ final class PartyMembers {
     }
 }
 
-enum PartyPosition {
+enum PartyPosition: String, CaseIterable, Codable {
     case frontLeft
     case frontRight
     case backLeft
     case backRight
+
+    var isFrontRow: Bool {
+        return self == .frontLeft || self == .frontRight
+    }
 }

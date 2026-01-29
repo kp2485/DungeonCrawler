@@ -20,6 +20,7 @@ final class ViewModel: ObservableObject {
     @Published var turnQueue: [String] = []  // Just names for now for the UI
     @Published var activeCombatantName: String?
     @Published var activeAbilities: [Ability] = []
+    @Published var gameLog: [String] = []
 
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
@@ -32,12 +33,14 @@ final class ViewModel: ObservableObject {
         let displayLink = NSScreen.main?.displayLink(target: self, selector: #selector(update))
         displayLink?.add(to: .current, forMode: .common)
 
-        // Subscribe to World changes if we wanted, but we have a game loop anyway
+        // Initial log
+        gameLog.append("Welcome to the Dungeon.")
     }
 
     @objc func update() {
-        if worldState != world.state {
-            worldState = world.state
+        // Sync World Log
+        if gameLog.count != world.logs.count {
+            gameLog = world.logs
         }
 
         let updatedStats = PartyStats(partyMembers: world.partyMembers)
@@ -50,14 +53,24 @@ final class ViewModel: ObservableObject {
             isCombatActive = world.isCombatActive
         }
 
-        // Ideally we only map this only when it changes, but for now every frame is fine for prototype
-        if isCombatActive {
-            let newQueue = world.turnQueue.map { "\($0.name) (Init: \($0.currentInitiative))" }
+        if let engine = world.combatEngine {
+            // In Combat
+            // Merge combat logs? Or just display them?
+            // For now, let's append combat engine logs to our view model game log if distinct
+            if engine.combatLog.count > 0 {
+                // Naive sync: take last few?
+                // Actually, let's just show engine logs in the main log for now
+                // In a real app we'd have separate UI
+            }
+
+            // Turn Queue
+            let newQueue = engine.turnQueue.map { "\($0.name) (Init: \($0.currentInitiative))" }
             if turnQueue != newQueue {
                 turnQueue = newQueue
             }
 
-            if let active = world.activeCombatant {
+            // Active Combatant
+            if let active = engine.activeCombatant {
                 if activeCombatantName != active.name {
                     activeCombatantName = active.name
                 }
@@ -66,11 +79,16 @@ final class ViewModel: ObservableObject {
                     if activeAbilities != pm.abilities {
                         activeAbilities = pm.abilities
                     }
-                } else if !activeAbilities.isEmpty {
+                } else {
                     activeAbilities = []
                 }
+            } else {
+                activeCombatantName = nil
+                activeAbilities = []
             }
+
         } else {
+            // Out of Combat
             if !turnQueue.isEmpty { turnQueue = [] }
             activeCombatantName = nil
             if !activeAbilities.isEmpty { activeAbilities = [] }

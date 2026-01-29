@@ -22,7 +22,6 @@ import Testing
             
             #expect(world.partyMembers[.frontLeft].currentHP == originalHP)
         }
-    }
     
     @Test("given the party is far away from the enemy, the party does not take damage") func shouldNotTakeDamage() {
             let world = World(floors: [Map()])

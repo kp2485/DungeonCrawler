@@ -15,39 +15,32 @@ final class World: ObservableObject {
     @Published private(set) var currentFloorIndex = 0
     @Published private(set) var enemies: [Enemy] = []
 
+    // Game Log
+    @Published private(set) var logs: [String] = []
+
     // Combat State
-    @Published var turnQueue: [Combatant] = []
-    @Published var activeCombatantIndex: Int = 0
-    @Published var isCombatActive: Bool = false
+    @Published var combatEngine: CombatEngine?
+    var isCombatActive: Bool {
+        return combatEngine != nil
+    }
 
     private let floors: [Map]
     let partyMembers = PartyMembers()
 
-    var currentFloor: Map {
-        floors[currentFloorIndex]
+    func log(_ message: String) {
+        logs.append(message)
+        if logs.count > 50 { logs.removeFirst() }
+        print(message)
     }
 
-    var enemiesOnCurrentFloor: [Enemy] {
-        enemies
-    }
+    var currentFloor: Map { floors[currentFloorIndex] }
+    var enemiesOnCurrentFloor: [Enemy] { enemies }
 
     var state: WorldState {
         if isCombatActive { return .combat }
-
-        if currentFloor.tileAt(partyPosition) == .winTarget {
-            return .win
-        }
-
-        if partyMembers.alivePartyMembers.isEmpty {
-            return .lose
-        }
-
+        if currentFloor.tileAt(partyPosition) == .winTarget { return .win }
+        if partyMembers.alivePartyMembers.isEmpty { return .lose }
         return .undetermined
-    }
-
-    var activeCombatant: Combatant? {
-        guard isCombatActive, !turnQueue.isEmpty else { return nil }
-        return turnQueue[activeCombatantIndex % turnQueue.count]
     }
 
     init(
@@ -73,7 +66,6 @@ final class World: ObservableObject {
     }
 
     func update(at time: Date) {
-        // Real-time updates paused during combat
         if !isCombatActive {
             checkForEnemyContact()
         }
@@ -82,206 +74,81 @@ final class World: ObservableObject {
     func checkForEnemyContact() {
         for enemy in enemies where enemy.isAlive {
             if currentFloor.hasLineOfSight(from: enemy.position, to: partyPosition) {
-                print("Enemy spotted player! initiating combat.")
-                startCombat()
-                return
-            }
-        }
-    }
-
-    func startCombat() {
-        isCombatActive = true
-        var combatants: [Combatant] = partyMembers.alivePartyMembers
-        // Add nearby enemies to combat
-        let nearbyEnemies = enemies.filter {
-            $0.isAlive && currentFloor.hasLineOfSight(from: $0.position, to: partyPosition)
-        }
-        combatants.append(contentsOf: nearbyEnemies)
-
-        // Roll Initiative
-        for combatant in combatants {
-            combatant.rollInitiative()
-        }
-
-        // Sort by Initiative Descending, re-rolling ties implicitly by stable sort order if equal, but just speed for now
-        turnQueue = combatants.sorted {
-            if $0.currentInitiative == $1.currentInitiative {
-                return $0.attributes.speed > $1.attributes.speed
-            }
-            return $0.currentInitiative > $1.currentInitiative
-        }
-
-        activeCombatantIndex = 0
-        processTurn()
-    }
-
-    func processTurn() {
-        guard let current = activeCombatant else { return }
-
-        if let enemy = current as? Enemy {
-            // Enemy Turn Logic
-            print("Enemy \(enemy.name) taking turn.")
-            // Simple logic: If adjacent, attack random member. If not, move closer.
-            if enemy.position.manhattanDistanceTo(partyPosition) <= 1 {
-                if let target = partyMembers.alivePartyMembers.randomElement() {
-                    enemy.attack(target)
-                    print("Enemy attacked \(target.name)")
+                if enemy.position == partyPosition || isFacing(enemy: enemy, target: partyPosition)
+                {
+                    print("Encounter started!")
+                    startCombat(with: enemy)
+                    return
                 }
-            } else {
-                // Move towards player (simple)
-                // In a real grid, A* would be better, but we will simply move towards player x then y
-                // For now, enemy movement shouldn't teleport, so we skip complex pathfinding
             }
-
-            endTurn()
-        } else {
-            // Player Turn: Wait for input
-            print("Player's turn: \(current.name)")
         }
     }
 
-    func endTurn() {
-        activeCombatantIndex = (activeCombatantIndex + 1) % turnQueue.count
-
-        // Remove dead combatants
-        turnQueue = turnQueue.filter { $0.isAlive }
-        if turnQueue.isEmpty || !turnQueue.contains(where: { $0 is Enemy }) {
-            print("Combat ended. Victory!")
-            isCombatActive = false
-            return
+    private func isFacing(enemy: Enemy, target: Coordinate) -> Bool {
+        let dx = target.x - enemy.position.x
+        let dy = target.y - enemy.position.y
+        switch enemy.heading {
+        case .north: return dy < 0
+        case .south: return dy > 0
+        case .east: return dx > 0
+        case .west: return dx < 0
         }
-        if !turnQueue.contains(where: { $0 is PartyMember }) {
-            print("Combat ended. Defeat!")
-            isCombatActive = false  // Will switch to .lose state
-            return
-        }
+    }
 
-        processTurn()
+    func startCombat(with enemy: Enemy) {
+        // Create an Enemy Group based on the encountered enemy
+        // For now, 1 enemy = 1 group of 1
+        // Later: "3x Skeletons"
+        let group = EnemyGroup(enemies: [enemy], name: enemy.name)
+
+        self.combatEngine = CombatEngine(world: self, enemyGroup: group)
+        log("Combat started with \(group.name)!")
+    }
+
+    func endCombat(won: Bool) {
+        self.combatEngine = nil
+        if won {
+            log("Victory!")
+        } else {
+            log("Defeat...")
+            // trigger lose state
+        }
     }
 
     func perform(_ command: PartyCommand) {
-        guard canPerformAction else { return }
+        // If Combat is active, World mostly ignores standard movement commands
+        // or forwards them if we want to allow running via movement keys?
+        // For now, blocks standard movement.
 
-        // If in combat, only allow action if it is a PartyMember's turn (conceptually)
-        // For simplicity, any input during Player Turn counts as the "Active" Party Member's action
-        if isCombatActive {
-            if activeCombatant is PartyMember {
-                switch command {
-                case .attack:
-                    performAttack()
-                    endTurn()
-                case .wait:
-                    print("Player waited.")
-                    endTurn()
-                default:
-                    print("Movement not yet implemented in combat (costs turn?)")
-                    // For now, let's say movement ends turn too
-                    switch command {
-                    case .move(let direction):
-                        performMovement(direction)
-                        endTurn()
-                    case .turnCounterClockwise:
-                        turnPartyCounterClockwise()
-                    // turning is free? or ends turn? let's make it free for now
-                    case .turnClockwise:
-                        turnPartyClockwise()
-                    default: break
-                    }
-                }
-            }
+        guard combatEngine == nil else {
+            print("In combat, use CombatEngine commands.")
             return
         }
 
-        // Out of Combat
+        guard state != .win && state != .lose else { return }
+
         switch command {
         case .move(let direction):
             performMovement(direction)
-            checkForEnemyContact()  // Check after move
+            checkForEnemyContact()
         case .turnCounterClockwise:
             turnPartyCounterClockwise()
-            checkForEnemyContact()  // Check after turn (fov change?)
+            checkForEnemyContact()
         case .turnClockwise:
             turnPartyClockwise()
             checkForEnemyContact()
-        case .attack:
-            performAttack()  // Can initiate combat? or just whack air
-        case .ability(let ability):
-            performAbility(ability)
-            // Ability use may provoke or reveal enemies
-            checkForEnemyContact()
         case .wait:
             break
+        default:
+            print("Command not supported out of combat or handled by UI directly.")
         }
-    }
-
-    func performAttack() {
-        // Attack tile in front
-        let targetPos = partyPosition + partyHeading.toCoordinate
-
-        // Find which party member is dealing the damage
-        // For simplicity in this group-based movement, we'll say the "Active" member if in combat,
-        // or the "Front Left" (Leader) if initiating.
-        let attacker: Combatant
-        if isCombatActive, let active = activeCombatant {
-            attacker = active
-        } else {
-            attacker = partyMembers[.frontLeft]
-        }
-
-        if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
-            // Combat Math
-            let hitChance = 50 + (attacker.attributes.dexterity * 2) - (enemy.attributes.agility)
-            let roll = rollDie(sides: 100)
-
-            if roll <= hitChance {
-                // Hit!
-                var damage = attacker.attributes.strength / 2
-
-                // Crit Check (Luck)
-                let critChance = attacker.attributes.luck
-                if rollDie(sides: 100) <= critChance {
-                    damage *= 2
-                    print("Critical Hit!")
-                }
-
-                // Ensure at least 1 damage
-                damage = max(1, damage)
-
-                enemy.takeDamage(damage)
-                print("\(attacker.name) attacked \(enemy.name) for \(damage) damage!")
-
-                if !enemy.isAlive {
-                    print("Enemy defeated!")
-                }
-
-                if !isCombatActive && enemy.isAlive {
-                    startCombat()
-                }
-            } else {
-                print(
-                    "\(attacker.name) missed \(enemy.name)! (Rolled \(roll) vs Chance \(hitChance))"
-                )
-                if !isCombatActive {
-                    startCombat()  // Miss still triggers combat
-                }
-            }
-        } else {
-            print("Swung at nothing.")
-        }
-    }
-
-    private var canPerformAction: Bool {
-        state != .win && state != .lose
     }
 
     private func performMovement(_ direction: MovementDirection) {
         let newPosition =
             partyPosition + direction.toCompassDirection(facing: partyHeading).toCoordinate
-
         switch currentFloor.tileAt(newPosition) {
-
-        case .wall:
-            break
+        case .wall: break
         case .stairsUp:
             currentFloorIndex += 1
             partyPosition = newPosition
@@ -299,72 +166,6 @@ final class World: ObservableObject {
 
     private func turnPartyCounterClockwise() {
         partyHeading = partyHeading.rotatedCounterClockwise()
-    }
-    func performAbility(_ ability: Ability) {
-        guard let caster = activeCombatant as? PartyMember else { return }
-
-        if caster.currentMana < ability.manaCost {
-            print("Not enough mana!")
-            return
-        }
-
-        caster.currentMana -= ability.manaCost
-        print("\(caster.name) uses \(ability.name)!")
-
-        switch ability.type {
-        case .damage:
-            // Single target in front
-            let targetPos = partyPosition + partyHeading.toCoordinate
-            if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
-                // Damage Calculation
-                // Power + Attribute Scaling
-                let scalingStat = caster.attributes[ability.attributeScaling]
-                let damage = ability.power + (scalingStat / 2)
-                enemy.takeDamage(damage)
-                print("Dealt \(damage) damage to \(enemy.name).")
-                if !enemy.isAlive { print("\(enemy.name) defeated!") }
-            } else {
-                print("No target!")
-            }
-
-        case .heal:
-            // Self heal for now
-            let scalingStat = caster.attributes[ability.attributeScaling]
-            let healAmount = ability.power + (scalingStat / 2)
-            caster.currentHP = min(caster.maxHP, caster.currentHP + healAmount)
-            print("Healed \(healAmount) HP.")
-
-        case .aoe:
-            let scalingStat = caster.attributes[ability.attributeScaling]
-            let damage = ability.power + (scalingStat / 2)
-            for enemy in enemies
-            where enemy.isAlive
-                && currentFloor.hasLineOfSight(from: partyPosition, to: enemy.position)
-            {
-                enemy.takeDamage(damage)
-                print("Hit \(enemy.name) for \(damage).")
-            }
-
-        case .buff:
-            // Boost attribute temporarily (or permanently for battle)
-            let boost = ability.power
-            caster.attributes[ability.attributeScaling] += boost
-            print("Boosted \(ability.attributeScaling) by \(boost).")
-
-        case .debuff:
-            let targetPos = partyPosition + partyHeading.toCoordinate
-            if let enemy = enemies.first(where: { $0.position == targetPos && $0.isAlive }) {
-                let reduction = ability.power
-                var currentVal = enemy.attributes[ability.attributeScaling]
-                enemy.attributes[ability.attributeScaling] = max(1, currentVal - reduction)
-                print("Reduced enemy \(ability.attributeScaling) by \(reduction).")
-            }
-
-        case .utility:
-            print("Utility effect applied.")
-        }
-
-        endTurn()
     }
 }
 
@@ -441,4 +242,3 @@ func makeWorld(_ floorStrings: [String]) -> World {
         return (startingPosition, enemies)
     }
 }
-

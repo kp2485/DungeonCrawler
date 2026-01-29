@@ -5,7 +5,10 @@
 //  Created by Maarten Engels on 28/06/2025.
 //
 
-final class PartyMember: Combatant {
+import Foundation
+
+final class PartyMember: Combatant, Identifiable, Codable {
+    var id: UUID = UUID()
     let name: String
     let title: String
     var currentHP: Int
