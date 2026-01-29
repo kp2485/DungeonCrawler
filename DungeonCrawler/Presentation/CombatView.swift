@@ -37,6 +37,24 @@ struct CombatView: View {
                     .foregroundColor(.gold)
                     .padding(.bottom, 4)
 
+                // Enemy List (New UX)
+                VStack(spacing: 2) {
+                    ForEach(viewModel.availableEnemies) { enemy in
+                        HStack {
+                            Text(enemy.name)
+                                .foregroundColor(enemy.isAlive ? .white : .gray)
+                            Spacer()
+                            // Health Status text (instead of bar)
+                            Text(enemyHealthStatus(enemy))
+                                .font(.caption2)
+                                .foregroundColor(getHealthColor(enemy))
+                        }
+                        .padding(2)
+                        .background(Color.black.opacity(0.3))
+                    }
+                }
+                .padding(.bottom, 8)
+
                 // Menu Content
                 switch menuState {
                 case .main:
@@ -70,6 +88,17 @@ struct CombatView: View {
         .padding()
         .background(StoneBackground())
         .border(Color.gold, width: 2)
+    }
+
+    // Helper for health description (Wizardry style)
+    private func enemyHealthStatus(_ enemy: Enemy) -> String {
+        if !enemy.isAlive { return "DEAD" }
+        let pct = Double(enemy.currentHP) / Double(enemy.maxHP)
+        if pct >= 1.0 { return "Unharmed" }
+        if pct > 0.75 { return "Scratched" }
+        if pct > 0.5 { return "Hurt" }
+        if pct > 0.25 { return "Wounded" }
+        return "Critical"
     }
 
     // MARK: - Menus

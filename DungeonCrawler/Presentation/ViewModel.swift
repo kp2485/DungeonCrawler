@@ -21,11 +21,16 @@ final class ViewModel: ObservableObject {
     @Published var activeCombatantName: String?
     @Published var activeAbilities: [Ability] = []
     @Published var gameLog: [String] = []
-    
+
     // Combat UI State
     @Published var currentSelectionMember: PartyMember?
     @Published var availableEnemies: [Enemy] = []
+
     @Published var availablePartyMembers: [PartyMember] = []
+
+    // Visual Effects
+    @Published var lastVisualEffect: CombatVisualEffect?
+    private var lastObservedEffectId: UUID?
 
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
@@ -81,12 +86,14 @@ final class ViewModel: ObservableObject {
                     activeCombatantName = "Choosing: \(selecting.name)"
                     activeAbilities = selecting.abilities
                 }
-                
+
                 // Update targets while selecting
                 if availableEnemies.map({ $0.id }) != engine.enemyGroup.enemies.map({ $0.id }) {
                     availableEnemies = engine.enemyGroup.enemies
                 }
-                if availablePartyMembers.map({ $0.id }) != engine.delegate.partyMembers.allPartyMembers.map({ $0.id }) {
+                if availablePartyMembers.map({ $0.id })
+                    != engine.delegate.partyMembers.allPartyMembers.map({ $0.id })
+                {
                     availablePartyMembers = engine.delegate.partyMembers.allPartyMembers
                 }
             } else if let active = engine.activeCombatant {
@@ -102,12 +109,14 @@ final class ViewModel: ObservableObject {
                 } else {
                     activeAbilities = []
                 }
-                
+
                 // Update targets while executing
                 if availableEnemies.map({ $0.id }) != engine.enemyGroup.enemies.map({ $0.id }) {
                     availableEnemies = engine.enemyGroup.enemies
                 }
-                if availablePartyMembers.map({ $0.id }) != engine.delegate.partyMembers.allPartyMembers.map({ $0.id }) {
+                if availablePartyMembers.map({ $0.id })
+                    != engine.delegate.partyMembers.allPartyMembers.map({ $0.id })
+                {
                     availablePartyMembers = engine.delegate.partyMembers.allPartyMembers
                 }
             } else {
@@ -115,6 +124,16 @@ final class ViewModel: ObservableObject {
                 activeCombatantName = nil
                 activeAbilities = []
                 currentSelectionMember = nil
+            }
+
+            // Visual Effects
+            // Visual Effects
+            // Check for new effects based on unique ID
+            if let event = engine.lastEffect {
+                if event.id != lastObservedEffectId {
+                    lastObservedEffectId = event.id
+                    lastVisualEffect = event.type
+                }
             }
 
         } else {

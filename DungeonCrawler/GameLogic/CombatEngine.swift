@@ -16,6 +16,7 @@ final class CombatEngine: ObservableObject {
     @Published var phase: CombatPhase = .selection
     @Published var currentRound: Int = 0
     @Published var combatLog: [String] = []
+    @Published var lastEffect: CombatVisualEvent?
 
     // Selection State
     // Selection State
@@ -422,6 +423,7 @@ final class CombatEngine: ObservableObject {
                 let heal = ability.power * level
                 ally.currentHP = min(ally.maxHP, ally.currentHP + heal)
                 combatLog.append("Healed \(ally.name) for \(heal).")
+                lastEffect = CombatVisualEvent(type: .flashGreen)
             }
         case .buff, .utility:  // Grouping utility here for now
             if case .singleAlly(let ally) = target {

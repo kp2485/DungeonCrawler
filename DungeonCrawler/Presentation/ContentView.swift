@@ -40,6 +40,11 @@ struct ContentView: View {
     private let sideColumnWidth: CGFloat = 120
     private let viewportAspectRatio: CGFloat = 4.0 / 3.0
 
+    // MARK: - Visual Effects State
+    @State private var shakeOffset: CGFloat = 0
+    @State private var flashColor: Color?
+    @State private var flashOpacity: Double = 0
+
     var body: some View {
         HStack(spacing: 0) {
             // LEFT COLUMN (Party Left)
@@ -71,6 +76,14 @@ struct ContentView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .aspectRatio(viewportAspectRatio, contentMode: .fit)
                         .border(Color.gray, width: 4)
+                        .offset(x: shakeOffset)
+
+                    // Flash Overlay
+                    if let color = flashColor {
+                        color
+                            .opacity(flashOpacity)
+                            .allowsHitTesting(false)
+                    }
                 }
                 .padding(8)
                 .background(Color.black)
@@ -165,6 +178,29 @@ struct ContentView: View {
         #if os(iOS) || os(tvOS)
             .statusBar(hidden: true)
         #endif
+        .onChange(of: viewModel.lastVisualEffect) { oldValue, newValue in
+            guard let effect = newValue else { return }
+            triggerEffect(effect)
+        }
+    }
+
+    private func triggerEffect(_ effect: CombatVisualEffect) {
+        switch effect {
+        case .shake:
+            withAnimation(.linear(duration: 0.05)) { shakeOffset = -10 }
+            withAnimation(.linear(duration: 0.05).delay(0.05)) { shakeOffset = 10 }
+            withAnimation(.linear(duration: 0.05).delay(0.1)) { shakeOffset = -5 }
+            withAnimation(.linear(duration: 0.05).delay(0.15)) { shakeOffset = 5 }
+            withAnimation(.linear(duration: 0.05).delay(0.2)) { shakeOffset = 0 }
+        case .flashRed:
+            flashColor = .red
+            flashOpacity = 0.5
+            withAnimation(.easeOut(duration: 0.5)) { flashOpacity = 0 }
+        case .flashGreen:
+            flashColor = .green
+            flashOpacity = 0.3
+            withAnimation(.easeOut(duration: 0.5)) { flashOpacity = 0 }
+        }
     }
 }
 
