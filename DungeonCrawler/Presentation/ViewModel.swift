@@ -65,13 +65,7 @@ final class ViewModel: ObservableObject {
 
         if let engine = world.combatEngine {
             // In Combat
-            // Merge combat logs? Or just display them?
-            // For now, let's append combat engine logs to our view model game log if distinct
-            if engine.combatLog.count > 0 {
-                // Naive sync: take last few?
-                // Actually, let's just show engine logs in the main log for now
-                // In a real app we'd have separate UI
-            }
+            // Combat logs are now handled via Delegate -> World.log -> ViewModel.gameLog sync
 
             // Turn Queue
             let newQueue = engine.turnQueue.map { "\($0.name) (Init: \($0.currentInitiative))" }
@@ -194,6 +188,7 @@ struct PartyMemberStats {
     let maxHP: Int
     let currentMana: Int
     let maxMana: Int
+    let conditions: [String]
 
     init(partyMember: PartyMember) {
         self.name = partyMember.name
@@ -202,10 +197,12 @@ struct PartyMemberStats {
         self.maxHP = partyMember.maxHP
         self.currentMana = partyMember.currentMana
         self.maxMana = partyMember.maxMana
+        self.conditions = partyMember.activeConditions.map { $0.condition.name }
     }
 
     private init(
-        name: String, title: String, currentHP: Int, maxHP: Int, currentMana: Int, maxMana: Int
+        name: String, title: String, currentHP: Int, maxHP: Int, currentMana: Int, maxMana: Int,
+        conditions: [String]
     ) {
         self.name = name
         self.title = title
@@ -213,10 +210,12 @@ struct PartyMemberStats {
         self.maxHP = maxHP
         self.currentMana = currentMana
         self.maxMana = maxMana
+        self.conditions = conditions
     }
 
     static let empty = PartyMemberStats(
-        name: "Empty", title: "", currentHP: 0, maxHP: 1, currentMana: 0, maxMana: 1)
+        name: "Empty", title: "", currentHP: 0, maxHP: 1, currentMana: 0, maxMana: 1, conditions: []
+    )
 }
 
 extension PartyStats: Equatable {}

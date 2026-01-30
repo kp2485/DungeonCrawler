@@ -125,57 +125,69 @@ struct ContentView: View {
                     }
 
                     // Command Buttons (Grid)
-                    if viewModel.isCombatActive {
-                        CombatView(viewModel: viewModel)
-                    } else {
-                        HStack(alignment: .top, spacing: 8) {
-                            // Exploration / Interaction
-                            VStack(spacing: 4) {
-                                GoldButton(label: "MOVE") { /* Toggle Move Mode */  }
-                                GoldButton(label: "LOOK") { /* Inspect */  }
-                                GoldButton(label: "CAMP") { /* Rest */  }
-                                // Trigger combat debug
-                                GoldButton(label: "TEST") {
-                                    // Trigger random combat manually
-                                    let enemy = Enemy(position: world.partyPosition)
-                                    world.startCombat(with: enemy)
+                    ZStack(alignment: .top) {
+                        if viewModel.isCombatActive {
+                            CombatView(viewModel: viewModel)
+                                .transition(.opacity)
+                        } else {
+                            HStack(alignment: .top, spacing: 4) {
+                                // Action Group
+                                VStack(spacing: 2) {
+                                    RetroButton(label: "FIGHT") { /* Attack */  }
+                                    RetroButton(label: "SPELL") { /* Cast */  }
+                                    RetroButton(label: "ITEMS") { /* Use Item */  }
                                 }
-                            }
 
-                            // Movement (Mini-pad)
-                            VStack(spacing: 2) {
-                                GoldButton(label: "▲", small: true) {
-                                    world.perform(.move(direction: .forward))
-                                }
-                                HStack(spacing: 2) {
-                                    GoldButton(label: "◄", small: true) {
-                                        world.perform(.turnCounterClockwise)
+                                // Movement Group
+                                VStack(spacing: 2) {
+                                    RetroButton(label: "MOVE") { /* Toggle Move */  }
+                                    HStack(spacing: 2) {
+                                        RetroButton(label: "Q", small: true) {
+                                            world.perform(.turnCounterClockwise)
+                                        }
+                                        RetroButton(label: "W", small: true) {
+                                            world.perform(.move(direction: .forward))
+                                        }
+                                        RetroButton(label: "E", small: true) {
+                                            world.perform(.turnClockwise)
+                                        }
                                     }
-                                    GoldButton(label: "▼", small: true) {
+                                    RetroButton(label: "S", small: true) {
                                         world.perform(.move(direction: .backwards))
                                     }
-                                    GoldButton(label: "►", small: true) {
-                                        world.perform(.turnClockwise)
+                                }
+
+                                // System Group
+                                VStack(spacing: 2) {
+                                    RetroButton(label: "CAMP") { /* Rest */  }
+                                    RetroButton(label: "TEST") {
+                                        let enemy = Enemy(position: world.partyPosition)
+                                        world.startCombat(with: enemy)
                                     }
                                 }
                             }
+                            .padding(4)
+                            .transition(.opacity)
                         }
-                        .padding(8)
                     }
+                    .frame(height: 120)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.black.opacity(0.3))
                 }
                 .background(StoneBackground())
+                .overlay(Rectangle().stroke(Color.wizGray, lineWidth: 2))
             }
             .frame(maxWidth: .infinity)
 
             // RIGHT COLUMN (Party Right)
             VStack(spacing: 4) {
-                PartyMemberPortrait(stats: viewModel.partyStats[.frontRight])
+                ForEach([PartyPosition.frontRight, .middleRight, .backRight], id: \.self) { pos in
+                    PartyMemberPortrait(stats: viewModel.partyStats[pos], alignRight: true)
+                }
                 Spacer()
-                PartyMemberPortrait(stats: viewModel.partyStats[.middleRight])
-                Spacer()
-                PartyMemberPortrait(stats: viewModel.partyStats[.backRight])
             }
             .frame(width: sideColumnWidth)
+            .padding(.vertical, 4)
             .background(StoneBackground())
         }
         .edgesIgnoringSafeArea(.all)
@@ -185,6 +197,24 @@ struct ContentView: View {
         .onChange(of: viewModel.lastVisualEffect) { oldValue, newValue in
             guard let effect = newValue else { return }
             triggerEffect(effect)
+        }
+        .overlay(
+            // Top Movement Indicator Strip
+            VStack {
+                HStack(spacing: 20) {
+                    Circle().fill(Color.green).frame(width: 8, height: 8)  // Valid Move
+                    Circle().fill(Color.wizYellow).frame(width: 8, height: 8)  // Hidden
+                    Circle().fill(Color.wizRed).frame(width: 8, height: 8)  // Danger
+                }
+                .padding(4)
+                .background(Color.black)
+                .cornerRadius(4)
+                .padding(.top, 40)  // Below notch/safe area
+                Spacer()
+            }, alignment: .top
+        )
+        .onAppear {
+            // Force light status bar if needed
         }
     }
 
@@ -215,61 +245,121 @@ struct ContentView: View {
 
 struct PartyMemberPortrait: View {
     let stats: PartyMemberStats
+    var alignRight: Bool = false
 
     var body: some View {
-        VStack(spacing: 2) {
-            // Portrait Placeholder
-            Rectangle()
-                .fill(Color.gray)
-                .frame(width: 80, height: 80)
-                .overlay(Text(String(stats.name.prefix(1))).font(.largeTitle))
-                .border(Color.gold, width: 2)
+        HStack(spacing: 2) {
+            // Bars on Left (if alignRight)
+            if alignRight {
+                StatusBars(stats: stats)
+            }
 
-            Text(stats.name)
-                .font(.caption)
-                .bold()
-                .foregroundColor(.white)
-                .lineLimit(1)
+            // Portrait
+            ZStack {
+                Rectangle()
+                    .fill(Color.gray)
+                    .frame(width: 64, height: 64)
+                    .overlay(
+                        Text(stats.name.prefix(2).uppercased())
+                            .font(.system(size: 24, weight: .heavy, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.5))
+                    )
+                    .border(Color.wizGray, width: 3)
 
-            Text(stats.title)
-                .font(.caption2)
-                .foregroundColor(.gold)
-
-            // Bars
-            HStack(spacing: 4) {
-                // HP Bar (Red)
+                // Name Overlay (Bottom)
                 VStack {
-                    ZStack(alignment: .bottom) {
-                        Rectangle().fill(Color.gray)
-                        Rectangle().fill(Color.red)
-                            .frame(
-                                height: CGFloat(stats.currentHP) / CGFloat(max(1, stats.maxHP)) * 60
-                            )
-                    }
-                    .frame(width: 8, height: 60)
+                    Spacer()
+                    Text(stats.name)
+                        .font(.custom("Courier", size: 10))
+                        .fontWeight(.bold)
+                        .foregroundColor(.gold)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.black.opacity(0.7))
                 }
 
-                // MP Bar (Blue)
-                VStack {
-                    ZStack(alignment: .bottom) {
-                        Rectangle().fill(Color.gray)
-                        Rectangle().fill(Color.blue)
-                            .frame(
-                                height: CGFloat(stats.currentMana) / CGFloat(max(1, stats.maxMana))
-                                    * 60)
+                // Condition Badges (Top Right)
+                if !stats.conditions.isEmpty {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            Text(stats.conditions.first!.prefix(1))
+                                .font(.system(size: 8, weight: .black))
+                                .frame(width: 12, height: 12)
+                                .background(Color.red)
+                                .foregroundColor(.white)
+                        }
+                        Spacer()
                     }
-                    .frame(width: 8, height: 60)
-                }
-
-                // Stamina (Yellow) - Placeholder
-                VStack {
-                    Rectangle().fill(Color.yellow).frame(width: 8, height: 60)
                 }
             }
+            .frame(width: 64, height: 64)
+
+            // Bars on Right (if !alignRight)
+            if !alignRight {
+                StatusBars(stats: stats)
+            }
         }
-        .padding(8)
+        .padding(4)
         .background(Color.black.opacity(0.5))
-        .cornerRadius(4)
+        .border(Color.wizGray, width: 1)
+    }
+}
+
+struct StatusBars: View {
+    let stats: PartyMemberStats
+
+    var body: some View {
+        HStack(spacing: 1) {
+            // HP
+            VariableVerticalBar(color: .wizRed, current: stats.currentHP, max: stats.maxHP)
+            // MP
+            VariableVerticalBar(color: .wizBlue, current: stats.currentMana, max: stats.maxMana)
+            // Stamina (Placeholder)
+            VariableVerticalBar(color: .wizYellow, current: 100, max: 100)
+        }
+        .frame(width: 24, height: 60)
+        .background(Color.black)
+        .border(Color.gray, width: 1)
+    }
+}
+
+struct VariableVerticalBar: View {
+    let color: Color
+    let current: Int
+    let max: Int
+
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .bottom) {
+                Color.black
+                color
+                    .frame(
+                        height: geo.size.height * (CGFloat(current) / CGFloat(max > 0 ? max : 1)))
+            }
+        }
+        .frame(width: 6)
+    }
+}
+
+struct RetroButton: View {
+    let label: String
+    var small: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: small ? 10 : 12, weight: .bold, design: .monospaced))
+                .foregroundColor(.gold)
+                .frame(width: small ? 30 : 60, height: small ? 20 : 25)
+                .background(
+                    ZStack {
+                        Color.black
+                        Rectangle().stroke(Color.wizGray, lineWidth: 2)
+                    }
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

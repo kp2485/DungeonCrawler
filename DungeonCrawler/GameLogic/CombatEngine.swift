@@ -15,7 +15,6 @@ final class CombatEngine: ObservableObject {
     // Combat State
     @Published var phase: CombatPhase = .selection
     @Published var currentRound: Int = 0
-    @Published var combatLog: [String] = []
     @Published var lastEffect: CombatVisualEvent?
 
     // Selection State
@@ -58,7 +57,7 @@ final class CombatEngine: ObservableObject {
 
         // Auto-select actions for dead members (shouldn't be in queue check, but safety)
 
-        combatLog.append("\n--- Round \(currentRound) Start ---")
+        delegate.log("\n--- Round \(currentRound) Start ---")
 
         // 0. Cooldown Management & cleanup
         for member in delegate.partyMembers.alivePartyMembers {
@@ -113,7 +112,7 @@ final class CombatEngine: ObservableObject {
                 switch activeCondition.condition {
                 case .poison(let amount), .burning(let amount), .bleeding(let amount):
                     combatant.takeDamage(amount)
-                    combatLog.append(
+                    delegate.log(
                         "\(combatant.name) takes \(amount) damage from \(activeCondition.condition.name)."
                     )
                 case .regenerating(let amount):
@@ -121,7 +120,7 @@ final class CombatEngine: ObservableObject {
                     combatant.currentHP = min(combatant.maxHP, combatant.currentHP + amount)
                     let healed = combatant.currentHP - oldHP
                     if healed > 0 {
-                        combatLog.append("\(combatant.name) regenerates \(healed) HP.")
+                        delegate.log("\(combatant.name) regenerates \(healed) HP.")
                     }
                 default: break
                 }
@@ -132,7 +131,7 @@ final class CombatEngine: ObservableObject {
                 if activeCondition.duration > 0 {
                     newConditions.append(activeCondition)
                 } else {
-                    combatLog.append(
+                    delegate.log(
                         "\(activeCondition.condition.name) fades from \(combatant.name).")
                 }
             }
@@ -153,7 +152,7 @@ final class CombatEngine: ObservableObject {
             // For now, existing code logic is retained.
 
             if !combatant.isAlive {
-                combatLog.append("\(combatant.name) succumbed to conditions.")
+                delegate.log("\(combatant.name) succumbed to conditions.")
             }
         }
     }
@@ -187,7 +186,7 @@ final class CombatEngine: ObservableObject {
 
     func startExecutionPhase() {
         phase = .execution
-        combatLog.append("Executing actions...")
+        delegate.log("Executing actions...")
 
         // 1. Roll Initiatives
         var combatants: [Combatant] = delegate.partyMembers.alivePartyMembers
@@ -227,7 +226,7 @@ final class CombatEngine: ObservableObject {
         if combatant.hasCondition(.stunned) || combatant.hasCondition(.asleep)
             || combatant.hasCondition(.paralyzed)
         {
-            combatLog.append("\(combatant.name) cannot act!")
+            delegate.log("\(combatant.name) cannot act!")
             currentTurnIndex += 1
             processNextTurn()
             return
@@ -238,7 +237,7 @@ final class CombatEngine: ObservableObject {
             if let action = pendingActions[partyMember.id] {
                 perform(action, source: partyMember)
             } else {
-                combatLog.append("\(partyMember.name) hesitated!")
+                delegate.log("\(partyMember.name) hesitated!")
             }
         } else if let enemy = combatant as? Enemy {
             performEnemyTurn(enemy)
@@ -261,23 +260,23 @@ final class CombatEngine: ObservableObject {
         case .cast(let ability, let level, let target):
             resolveCast(source: source, ability: ability, level: level, target: target)
         case .defend:
-            combatLog.append("\(source.name) takes a defensive stance.")
+            delegate.log("\(source.name) takes a defensive stance.")
             source.activeConditions.append(ActiveCondition(condition: .defending, duration: 1))
         case .item(let item, let target):
             resolveItem(source: source, item: item, target: target)
         case .run:
-            combatLog.append("\(source.name) tries to run!")
+            delegate.log("\(source.name) tries to run!")
             // Run Logic
             // Simple probability: 50% + Speed Bonus
             // For now, flat 50%
             if Double.random(in: 0...1) < 0.5 {
-                combatLog.append("Got away safely!")
+                delegate.log("Got away safely!")
                 delegate.endCombat(result: .escaped)
             } else {
-                combatLog.append("Couldn't escape!")
+                delegate.log("Couldn't escape!")
             }
         case .wait:
-            combatLog.append("\(source.name) waits.")
+            delegate.log("\(source.name) waits.")
         }
     }
 
@@ -336,17 +335,17 @@ final class CombatEngine: ObservableObject {
         let targets = !frontRow.isEmpty ? frontRow : backRow
 
         if let target = targets.randomElement() {
-            combatLog.append("\(enemy.name) attacks \(target.name)!")
+            delegate.log("\(enemy.name) attacks \(target.name)!")
             // DMG calc
             let dmg = max(1, (enemy.attributes.strength / 2) - (target.attributes.endurance / 4))
             target.takeDamage(dmg)
-            combatLog.append("Dealt \(dmg) damage.")
+            delegate.log("Dealt \(dmg) damage.")
 
             if !target.isAlive {
-                combatLog.append("\(target.name) collapsed!")
+                delegate.log("\(target.name) collapsed!")
             }
         } else {
-            combatLog.append("\(enemy.name) glares menacingly.")
+            delegate.log("\(enemy.name) glares menacingly.")
         }
     }
 
@@ -389,7 +388,7 @@ final class CombatEngine: ObservableObject {
         // Let's say Unarmed/Melee cannot hit from back row.
         // Future: Check weapon.range type
         if inBackRow && weapon.motion != .shoot {
-            combatLog.append("\(source.name) is too far to use \(weapon.name)!")
+            delegate.log("\(source.name) is too far to use \(weapon.name)!")
             return
         }
 
@@ -427,9 +426,9 @@ final class CombatEngine: ObservableObject {
 
                     if isCrit {
                         dmg *= 2
-                        combatLog.append("\(motionText) and CRITICALLY HITS!")
+                        delegate.log("\(motionText) and CRITICALLY HITS!")
                     } else {
-                        combatLog.append("\(motionText) and hits.")
+                        delegate.log("\(motionText) and hits.")
                     }
 
                     // Defense mitigation?
@@ -439,21 +438,21 @@ final class CombatEngine: ObservableObject {
 
                     let finalDmg = max(1, dmg)
                     enemy.takeDamage(finalDmg)
-                    combatLog.append("Dealt \(finalDmg) damage.")
+                    delegate.log("Dealt \(finalDmg) damage.")
 
                     if !enemy.isAlive {
-                        combatLog.append("\(enemy.name) was destroyed!")
+                        delegate.log("\(enemy.name) was destroyed!")
                     }
                 } else {
                     // Miss
-                    combatLog.append("\(motionText) but misses!")
+                    delegate.log("\(motionText) but misses!")
                 }
 
             } else {
-                combatLog.append("\(source.name) attacks a corpse.")
+                delegate.log("\(source.name) attacks a corpse.")
             }
         default:
-            combatLog.append("\(source.name) attacks wildly!")
+            delegate.log("\(source.name) attacks wildly!")
         }
     }
 
@@ -494,19 +493,19 @@ final class CombatEngine: ObservableObject {
     private func resolveCast(source: Combatant, ability: Ability, level: Int, target: TargetScope) {
         // 1. Check Mana
         if source.currentMana < ability.manaCost {
-            combatLog.append("\(source.name) tries to use \(ability.name) but lacks mana!")
+            delegate.log("\(source.name) tries to use \(ability.name) but lacks mana!")
             return
         }
 
         // 2. Check Cooldown
         if let cd = source.cooldowns[ability.id], cd > 0 {
-            combatLog.append(
+            delegate.log(
                 "\(source.name) tries to use \(ability.name) but it is on cooldown (\(cd))!")
             return
         }
 
         source.currentMana -= ability.manaCost
-        combatLog.append("\(source.name) uses \(ability.name)!")
+        delegate.log("\(source.name) uses \(ability.name)!")
 
         // 3. Set Cooldown
         if ability.cooldown > 0 {
@@ -561,7 +560,7 @@ final class CombatEngine: ObservableObject {
         }
 
         if targets.isEmpty {
-            combatLog.append("...but there were no valid targets!")
+            delegate.log("...but there were no valid targets!")
             return
         }
 
@@ -593,7 +592,7 @@ final class CombatEngine: ObservableObject {
             let oldHP = target.currentHP
             target.currentHP = min(target.maxHP, target.currentHP + totalPower)
             let amount = target.currentHP - oldHP
-            combatLog.append("\(target.name) heals \(amount) HP.")
+            delegate.log("\(target.name) heals \(amount) HP.")
             lastEffect = CombatVisualEvent(type: .flashGreen)
         case .buff, .debuff, .utility:
             break  // Handled by status effects mainly, or power is 0
@@ -606,7 +605,7 @@ final class CombatEngine: ObservableObject {
                 if let condition = convertToCondition(effectDef) {
                     let active = ActiveCondition(condition: condition, duration: effectDef.duration)
                     target.activeConditions.append(active)
-                    combatLog.append("\(target.name) gained \(condition.name)!")
+                    delegate.log("\(target.name) gained \(condition.name)!")
                 }
             }
         }
@@ -615,9 +614,9 @@ final class CombatEngine: ObservableObject {
     // Helper to interact with the loosely typed Combatant
     private func applyDamage(to target: Combatant, amount: Int, type: DamageType) {
         target.takeDamage(amount)
-        combatLog.append("\(target.name) takes \(amount) \(type.rawValue) damage.")
+        delegate.log("\(target.name) takes \(amount) \(type.rawValue) damage.")
         if !target.isAlive {
-            combatLog.append("\(target.name) was defeated!")
+            delegate.log("\(target.name) was defeated!")
         }
     }
 
@@ -678,27 +677,27 @@ final class CombatEngine: ObservableObject {
         if let index = source.inventory.firstIndex(where: { $0.id == item.id }) {
             source.inventory.remove(at: index)
         } else {
-            combatLog.append("\(source.name) fumbles for an item they don't have!")
+            delegate.log("\(source.name) fumbles for an item they don't have!")
             return
         }
 
-        combatLog.append("\(source.name) uses \(item.name).")
+        delegate.log("\(source.name) uses \(item.name).")
 
         switch item.type {
         case .potion:
             if case .singleAlly(let ally) = target {
                 let heal = item.power
                 ally.currentHP = min(ally.maxHP, ally.currentHP + heal)
-                combatLog.append("Recovered \(heal) HP to \(ally.name).")
+                delegate.log("Recovered \(heal) HP to \(ally.name).")
             }
         case .manaPotion:
             if case .singleAlly(let ally) = target {
                 let amount = item.power
                 ally.currentMana = min(ally.maxMana, ally.currentMana + amount)
-                combatLog.append("Recovered \(amount) Mana to \(ally.name).")
+                delegate.log("Recovered \(amount) Mana to \(ally.name).")
             }
         case .revive:
-            combatLog.append("Revive not implemented.")
+            delegate.log("Revive not implemented.")
         }
     }
 
@@ -717,12 +716,12 @@ final class CombatEngine: ObservableObject {
             // Let's verify if Enemy has an XP property? No, so we estimate.
             // 20 XP per enemy
             let totalXP = enemyGroup.enemies.count * 20
-            combatLog.append("Victory! Gained \(totalXP) XP.")
+            delegate.log("Victory! Gained \(totalXP) XP.")
 
             // Award XP (Naive implementation, assume World handles it or we iterate)
             for member in delegate.partyMembers.alivePartyMembers {
                 member.addXP(totalXP)
-                combatLog.append("\(member.name) gained \(totalXP) XP.")
+                delegate.log("\(member.name) gained \(totalXP) XP.")
             }
 
             // Delay cleanup to show victory message
@@ -734,7 +733,7 @@ final class CombatEngine: ObservableObject {
 
         if delegate.partyMembers.alivePartyMembers.isEmpty {
             phase = .defeat
-            combatLog.append("Party was wiped out...")
+            delegate.log("Party was wiped out...")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.delegate.endCombat(result: .defeat)
             }

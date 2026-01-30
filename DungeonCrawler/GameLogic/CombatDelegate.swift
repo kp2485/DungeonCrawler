@@ -16,4 +16,5 @@ enum CombatResult {
 protocol CombatDelegate: AnyObject {
     var partyMembers: PartyMembers { get }
     func endCombat(result: CombatResult)
+    func log(_ message: String)
 }

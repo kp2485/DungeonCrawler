@@ -9,20 +9,40 @@ import SwiftUI
 
 // MARK: - Colors
 extension Color {
-    static let gold = Color(red: 0.8, green: 0.7, blue: 0.2)
+    // Wizardry 7 Palette
+    static let gold = Color(red: 0.85, green: 0.75, blue: 0.25)
+    static let wizRed = Color(red: 0.8, green: 0.1, blue: 0.1)  // HP
+    static let wizBlue = Color(red: 0.1, green: 0.2, blue: 0.8)  // MP
+    static let wizYellow = Color(red: 0.9, green: 0.8, blue: 0.1)  // Stamina
+    static let wizGray = Color(red: 0.3, green: 0.3, blue: 0.35)  // Stone
+    static let wizDarkGray = Color(red: 0.15, green: 0.15, blue: 0.18)  // Deep Stone
 }
 
 // MARK: - Components
 struct StoneBackground: View {
     var body: some View {
-        Color(white: 0.2)
-            .overlay(
-                Image(systemName: "square.fill")  // Placeholder for texture
-                    .resizable()
-                    .opacity(0.1)
-                    .foregroundColor(.black)
-            )
-        // In a real app we'd use a tiled stone image asset
+        ZStack {
+            Color.wizDarkGray
+
+            // Texture noise (simulated)
+            Rectangle()
+                .fill(Color.wizGray.opacity(0.1))
+                .mask(
+                    Image(systemName: "square.fill")
+                        .resizable()
+                )
+
+            // Inner bevel/border
+            RoundedRectangle(cornerRadius: 2)
+                .strokeBorder(
+                    LinearGradient(
+                        gradient: Gradient(colors: [.white.opacity(0.1), .black.opacity(0.3)]),
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    lineWidth: 2
+                )
+        }
     }
 }
 

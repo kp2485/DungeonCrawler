@@ -28,103 +28,134 @@ struct CombatView: View {
     @State private var selectedActionContext: ActionContext?
 
     var body: some View {
-        VStack {
-            if let member = viewModel.currentSelectionMember {
+        HStack(spacing: 8) {
+            // LEFT PANEL: Control Pad
+            VStack {
+                if let member = viewModel.currentSelectionMember {
+                    // Turn Indicator
+                    Text(member.name)
+                        .dynamicTypeSize(.large)
+                        .foregroundColor(Color.wizYellow)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.bottom, 4)
 
-                // Header: Who is acting?
-                Text("\(member.name)'s Turn")
-                    .font(.headline)
-                    .foregroundColor(.gold)
-                    .padding(.bottom, 4)
-
-                // Enemy List (New UX)
-                VStack(spacing: 2) {
-                    ForEach(viewModel.availableEnemies) { enemy in
-                        HStack {
-                            Text(enemy.name)
-                                .foregroundColor(enemy.isAlive ? .white : .gray)
-                            Spacer()
-                            // Health Status text (instead of bar)
-                            Text(enemyHealthStatus(enemy))
-                                .font(.caption2)
-                                .foregroundColor(getHealthColor(enemy))
+                    // Menu Content
+                    Group {
+                        switch menuState {
+                        case .main:
+                            mainMenuGrid(member: member)
+                        case .abilities:
+                            abilitiesMenu(member: member)
+                        case .items:
+                            itemsMenu(member: member)
+                        case .targets(let context):
+                            targetsMenu(member: member, context: context)
                         }
-                        .padding(2)
-                        .background(Color.black.opacity(0.3))
                     }
-                }
-                .padding(.bottom, 8)
+                    .frame(maxHeight: .infinity, alignment: .top)
 
-                // Menu Content
-                switch menuState {
-                case .main:
-                    mainMenu(member: member)
-                case .abilities:
-                    abilitiesMenu(member: member)
-                case .items:
-                    itemsMenu(member: member)
-                case .targets(let context):
-                    targetsMenu(member: member, context: context)
-                }
-
-                // Back Button (if not at main)
-                if case .main = menuState {
-                    // No back
+                    // Back Button
+                    if case .main = menuState {
+                        // Spacer to keep layout consistent
+                    } else {
+                        Button(action: {
+                            menuState = .main
+                            selectedActionContext = nil
+                        }) {
+                            Text("BACK")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.red)
+                                .frame(maxWidth: .infinity)
+                                .padding(8)
+                                .background(Color.black.opacity(0.5))
+                                .border(Color.red, width: 1)
+                        }
+                    }
                 } else {
-                    Button("Back") {
-                        menuState = .main
-                        selectedActionContext = nil
-                    }
-                    .foregroundColor(.red)
-                    .padding(.top, 8)
+                    Text("Waiting...")
+                        .foregroundColor(.gray)
                 }
-
-            } else {
-                Text("Waiting...")
-                    .font(.caption)
-                    .foregroundColor(.gray)
             }
+            .padding(8)
+            .frame(maxWidth: .infinity)
+            .background(.opacity(0.5))
+            .border(Color.wizGray, width: 1)
+
+            // RIGHT PANEL: Intel (Enemies)
+            VStack(alignment: .leading, spacing: 4) {
+                Text("ENEMIES")
+                    .font(.caption)
+                    .foregroundColor(.white)
+                    .padding(.bottom, 2)
+
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(viewModel.availableEnemies) { enemy in
+                            HStack {
+                                Text(enemy.name)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(enemy.isAlive ? .white : .gray)
+                                Spacer()
+                                Text(enemyHealthStatus(enemy))
+                                    .font(.caption)
+                                    .fontWeight(.bold)
+                                    .foregroundColor(getHealthColor(enemy))
+                            }
+                            .padding(6)
+                            .background(Color.black.opacity(0.6))
+                            .overlay(Rectangle().stroke(Color.wizGray.opacity(0.5), lineWidth: 1))
+                        }
+                    }
+                }
+            }
+            .padding(8)
+            .frame(width: 200)  // Fixed width for enemy list
+            .background(Color.black.opacity(0.5))
+            .border(Color.wizGray, width: 1)
         }
-        .padding()
-        .background(StoneBackground())
-        .border(Color.gold, width: 2)
+        .frame(height: 200)  // Fixed total height for the combat container
+        .background(.opacity(0.8))
     }
 
     // Helper for health description (Wizardry style)
     private func enemyHealthStatus(_ enemy: Enemy) -> String {
         if !enemy.isAlive { return "DEAD" }
         let pct = Double(enemy.currentHP) / Double(enemy.maxHP)
-        if pct >= 1.0 { return "Unharmed" }
-        if pct > 0.75 { return "Scratched" }
-        if pct > 0.5 { return "Hurt" }
-        if pct > 0.25 { return "Wounded" }
-        return "Critical"
+        if pct >= 1.0 { return "100%" }
+        if pct > 0.75 { return ">75%" }
+        if pct > 0.5 { return ">50%" }
+        if pct > 0.25 { return ">25%" }
+        return "CRIT"
     }
 
     // MARK: - Menus
 
-    private func mainMenu(member: PartyMember) -> some View {
-        VStack(spacing: 8) {
-            GoldButton(label: "ATTACK") {
-                // If single enemy, maybe auto-select? For now, go to target select
+    private func mainMenuGrid(member: PartyMember) -> some View {
+        LazyVGrid(
+            columns: [
+                GridItem(.flexible()),
+                GridItem(.flexible()),
+            ], spacing: 4
+        ) {
+
+            // Row 1
+            CombatGridButton(label: "FIGHT", color: .red) {
                 menuState = .targets(.attack)
             }
-
-            GoldButton(label: "MAGIC") {
+            CombatGridButton(label: "SPELL", color: .blue, disabled: member.abilities.isEmpty) {
                 menuState = .abilities
             }
-            .disabled(member.abilities.isEmpty)
 
-            GoldButton(label: "ITEM") {
-                menuState = .items
-            }
-            .disabled(member.inventory.isEmpty)
-
-            GoldButton(label: "DEFEND") {
+            // Row 2
+            CombatGridButton(label: "DEFEND", color: .wizYellow) {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .defend)
             }
+            CombatGridButton(label: "ITEM", color: .green, disabled: member.inventory.isEmpty) {
+                menuState = .items
+            }
 
-            GoldButton(label: "RUN") {
+            // Row 3 (Full Width Options)
+            CombatGridButton(label: "RUN", color: .gray) {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .run)
             }
         }
@@ -151,7 +182,6 @@ struct CombatView: View {
                     }
                 }
             }
-            .frame(height: 100)
         }
     }
 
@@ -174,7 +204,6 @@ struct CombatView: View {
                     }
                 }
             }
-            .frame(height: 100)
         }
     }
 
@@ -206,7 +235,6 @@ struct CombatView: View {
                     }
                 }
             }
-            .frame(height: 100)
         }
     }
 
@@ -266,5 +294,26 @@ struct CombatView: View {
         if pct < 0.25 { return .red }
         if pct < 0.5 { return .yellow }
         return .green
+    }
+}
+
+struct CombatGridButton: View {
+    let label: String
+    let color: Color
+    var disabled: Bool = false
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(disabled ? .gray : .white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(disabled ? Color.black : color.opacity(0.6))
+                .border(disabled ? Color.gray : color, width: 2)
+        }
+        .disabled(disabled)
+        .buttonStyle(PlainButtonStyle())
     }
 }
