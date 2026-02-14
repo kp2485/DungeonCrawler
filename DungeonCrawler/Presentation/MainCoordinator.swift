@@ -17,6 +17,12 @@ enum AppScreen {
 
 struct MainCoordinator: View {
     @State private var currentScreen: AppScreen = .start
+    @StateObject private var viewModel: ViewModel
+
+    init() {
+        let world = MainCoordinator.makeInitialWorld()
+        _viewModel = StateObject(wrappedValue: ViewModel(world: world))
+    }
 
     var body: some View {
         ZStack {
@@ -25,10 +31,10 @@ struct MainCoordinator: View {
                 StartScreenView(currentScreen: $currentScreen)
                     .transition(.opacity)
             case .game:
-                ContentView()
+                ContentView(viewModel: viewModel)
                     .transition(.move(edge: .trailing))
             case .createCharacter:
-                PlaceholderView(title: "Create Character", currentScreen: $currentScreen)
+                CharacterCreationView(viewModel: viewModel, currentScreen: $currentScreen)
             case .assembleParty:
                 PlaceholderView(title: "Assemble Party", currentScreen: $currentScreen)
             case .settings:
@@ -37,6 +43,29 @@ struct MainCoordinator: View {
         }
         .animation(.easeInOut, value: currentScreen)
     }
+
+    static func makeInitialWorld() -> World {
+        return makeWorld([
+            """
+            ######
+            #S.#.#
+            #....#
+            #e.e.#
+            #<#..#
+            ######
+            """,
+            """
+            ######
+            #....#
+            #....#
+            #.#..#
+            #.#..#
+            #>#..#
+            #T...#
+            ######
+            """,
+        ])
+    }
 }
 
 struct PlaceholderView: View {
@@ -44,17 +73,26 @@ struct PlaceholderView: View {
     @Binding var currentScreen: AppScreen
 
     var body: some View {
-        VStack(spacing: 20) {
-            Text(title)
-                .font(.largeTitle)
-                .foregroundColor(.gold)
+        ZStack {
+            StoneBackground()
 
-            Button("Back") {
-                currentScreen = .start
+            VStack(spacing: 20) {
+                ZStack {
+                    StoneBackground(bevel: false)
+                        .frame(height: 60)
+                        .overlay(BevelBorder(width: 2))
+
+                    Text(title)
+                        .font(.largeTitle)
+                        .foregroundColor(.wizGold)
+                        .shadow(color: .black, radius: 1)
+                }
+
+                RetroButton(label: "BACK") {
+                    currentScreen = .start
+                }
             }
-            .buttonStyle(GoldButtonStyle())
+            .padding()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
     }
 }

@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct CombatView: View {
+struct CombatControlsView: View {
     @ObservedObject var viewModel: ViewModel
 
     // Local State for Menu Navigation
@@ -28,16 +28,21 @@ struct CombatView: View {
     @State private var selectedActionContext: ActionContext?
 
     var body: some View {
-        HStack(spacing: 8) {
-            // LEFT PANEL: Control Pad
-            VStack {
-                if let member = viewModel.currentSelectionMember {
+        ZStack {
+            StoneBackground(bevel: false)
+
+            if let member = viewModel.currentSelectionMember {
+                VStack(spacing: 4) {
                     // Turn Indicator
-                    Text(member.name)
-                        .dynamicTypeSize(.large)
-                        .foregroundColor(Color.wizYellow)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.bottom, 4)
+                    HStack {
+                        Text(member.name)
+                            .font(.system(size: 14, weight: .bold, design: .monospaced))  // Monospaced for retro feel
+                            .foregroundColor(Color.wizGold)
+                            .shadow(color: .black, radius: 1, x: 1, y: 1)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 4)
+                    .padding(.top, 4)
 
                     // Menu Content
                     Group {
@@ -56,77 +61,27 @@ struct CombatView: View {
 
                     // Back Button
                     if case .main = menuState {
-                        // Spacer to keep layout consistent
+                        // No back button on main menu
                     } else {
-                        Button(action: {
+                        RetroButton(label: "BACK", small: true) {
                             menuState = .main
                             selectedActionContext = nil
-                        }) {
-                            Text("BACK")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.red)
-                                .frame(maxWidth: .infinity)
-                                .padding(8)
-                                .background(Color.black.opacity(0.5))
-                                .border(Color.red, width: 1)
                         }
-                    }
-                } else {
-                    Text("Waiting...")
-                        .foregroundColor(.gray)
-                }
-            }
-            .padding(8)
-            .frame(maxWidth: .infinity)
-            .background(.opacity(0.5))
-            .border(Color.wizGray, width: 1)
-
-            // RIGHT PANEL: Intel (Enemies)
-            VStack(alignment: .leading, spacing: 4) {
-                Text("ENEMIES")
-                    .font(.caption)
-                    .foregroundColor(.white)
-                    .padding(.bottom, 2)
-
-                ScrollView {
-                    VStack(spacing: 2) {
-                        ForEach(viewModel.availableEnemies) { enemy in
-                            HStack {
-                                Text(enemy.name)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(enemy.isAlive ? .white : .gray)
-                                Spacer()
-                                Text(enemyHealthStatus(enemy))
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(getHealthColor(enemy))
-                            }
-                            .padding(6)
-                            .background(Color.black.opacity(0.6))
-                            .overlay(Rectangle().stroke(Color.wizGray.opacity(0.5), lineWidth: 1))
-                        }
+                        .padding(.bottom, 4)
                     }
                 }
+            } else {
+                Text("Waiting...")
+                    .font(.custom("Courier", size: 14))
+                    .foregroundColor(.stoneLight)
             }
-            .padding(8)
-            .frame(width: 200)  // Fixed width for enemy list
-            .background(Color.black.opacity(0.5))
-            .border(Color.wizGray, width: 1)
         }
-        .frame(height: 200)  // Fixed total height for the combat container
-        .background(.opacity(0.8))
+        .frame(maxWidth: .infinity)
+        // Removed border as parent container handles it
     }
 
-    // Helper for health description (Wizardry style)
-    private func enemyHealthStatus(_ enemy: Enemy) -> String {
-        if !enemy.isAlive { return "DEAD" }
-        let pct = Double(enemy.currentHP) / Double(enemy.maxHP)
-        if pct >= 1.0 { return "100%" }
-        if pct > 0.75 { return ">75%" }
-        if pct > 0.5 { return ">50%" }
-        if pct > 0.25 { return ">25%" }
-        return "CRIT"
-    }
+    // ... (Keep existing menu methods: mainMenuGrid, abilitiesMenu, itemsMenu, targetsMenu, Helpers) ...
+    // Note: Since I am replacing the whole file, I will paste the methods back in.
 
     // MARK: - Menus
 
@@ -139,103 +94,123 @@ struct CombatView: View {
         ) {
 
             // Row 1
-            CombatGridButton(label: "FIGHT", color: .red) {
+            RetroButton(label: "FIGHT") {
                 menuState = .targets(.attack)
             }
-            CombatGridButton(label: "SPELL", color: .blue, disabled: member.abilities.isEmpty) {
+            RetroButton(label: "SPELL") {
                 menuState = .abilities
             }
 
             // Row 2
-            CombatGridButton(label: "DEFEND", color: .wizYellow) {
+            RetroButton(label: "DEFEND") {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .defend)
             }
-            CombatGridButton(label: "ITEM", color: .green, disabled: member.inventory.isEmpty) {
+            RetroButton(label: "ITEM") {
                 menuState = .items
             }
 
             // Row 3 (Full Width Options)
-            CombatGridButton(label: "RUN", color: .gray) {
+            RetroButton(label: "RUN") {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .run)
             }
         }
+        .padding(4)
     }
 
     private func abilitiesMenu(member: PartyMember) -> some View {
         VStack(spacing: 4) {
-            Text("Select Ability").font(.caption).foregroundColor(.white)
+            Text("Select Ability").font(.system(size: 10)).foregroundColor(.stoneLight)
             ScrollView {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 2) {
                     ForEach(member.abilities, id: \.self) { ability in
                         Button(action: {
                             menuState = .targets(.ability(ability))
                         }) {
                             HStack {
-                                Text(ability.name).foregroundColor(.white)
+                                Text(ability.name)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(.white)
                                 Spacer()
-                                Text("\(ability.manaCost) MP").foregroundColor(.blue)
+                                Text("\(ability.manaCost) MP")
+                                    .font(.system(size: 10, design: .monospaced))
+                                    .foregroundColor(.wizBlue)
                             }
                             .padding(4)
-                            .background(Color.black.opacity(0.3))
+                            .background(Color.stoneDark.opacity(0.5))
+                            .border(Color.stoneLight.opacity(0.3), width: 1)
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .disabled(member.currentMana < ability.manaCost)
                     }
                 }
             }
         }
+        .padding(4)
     }
 
     private func itemsMenu(member: PartyMember) -> some View {
         VStack(spacing: 4) {
-            Text("Select Item").font(.caption).foregroundColor(.white)
+            Text("Select Item").font(.system(size: 10)).foregroundColor(.stoneLight)
             ScrollView {
-                VStack(alignment: .leading) {
+                VStack(alignment: .leading, spacing: 2) {
                     ForEach(member.inventory, id: \.id) { item in
                         Button(action: {
                             menuState = .targets(.item(item))
                         }) {
                             HStack {
-                                Text(item.name).foregroundColor(.white)
+                                Text(item.name)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(.white)
                                 Spacer()
                             }
                             .padding(4)
-                            .background(Color.black.opacity(0.3))
+                            .background(Color.stoneDark.opacity(0.5))
+                            .border(Color.stoneLight.opacity(0.3), width: 1)
                         }
+                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
         }
+        .padding(4)
     }
 
     private func targetsMenu(member: PartyMember, context: ActionContext) -> some View {
         VStack(spacing: 4) {
-            Text("Select Target").font(.caption).foregroundColor(.white)
+            Text("Select Target").font(.system(size: 10)).foregroundColor(.stoneLight)
 
-            ScrollView {
-                VStack(alignment: .leading) {
+            InsetPanel {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 2) {
 
-                    // Logic to determine valid targets based on context
-                    let targets = getPotentialTargets(context: context)
+                        // Logic to determine valid targets based on context
+                        let targets = getPotentialTargets(context: context)
 
-                    ForEach(targets, id: \.id) { target in
-                        Button(action: {
-                            executeAction(member: member, context: context, target: target)
-                        }) {
-                            HStack {
-                                Text(target.name)
-                                    .foregroundColor(target.isAlive ? .white : .gray)
-                                Spacer()
-                                Text("\(target.currentHP)/\(target.maxHP) HP")
-                                    .font(.caption)
-                                    .foregroundColor(getHealthColor(target))
+                        ForEach(targets, id: \.id) { target in
+                            Button(action: {
+                                executeAction(member: member, context: context, target: target)
+                            }) {
+                                HStack {
+                                    Text(target.name)
+                                        .font(.system(size: 12, design: .monospaced))
+                                        .foregroundColor(target.isAlive ? .white : .gray)
+                                    Spacer()
+                                    Text("\(target.currentHP)/\(target.maxHP) HP")
+                                        .font(.system(size: 10, design: .monospaced))
+                                        .foregroundColor(getHealthColor(target))
+                                }
+                                .padding(4)
+                                .background(Color.stoneDark.opacity(0.5))
+                                //        .border(Color.stoneLight.opacity(0.3), width: 1)
                             }
-                            .padding(4)
-                            .background(Color.black.opacity(0.3))
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
+                    .padding(2)
                 }
             }
         }
+        .padding(4)
     }
 
     // MARK: - Helpers
@@ -288,32 +263,65 @@ struct CombatView: View {
         // Reset state for next time
         menuState = .main
     }
+}
 
-    private func getHealthColor(_ combatant: Combatant) -> Color {
-        let pct = Double(combatant.currentHP) / Double(combatant.maxHP)
-        if pct < 0.25 { return .red }
-        if pct < 0.5 { return .yellow }
-        return .green
+// MARK: - CombatEnemyListView
+
+struct CombatEnemyListView: View {
+    @ObservedObject var viewModel: ViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Text("ENEMIES")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.stoneLight)
+                Spacer()
+            }
+            .padding(4)
+            .background(Color.black.opacity(0.8))
+
+            InsetPanel {
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(viewModel.availableEnemies) { enemy in
+                            HStack {
+                                Text(enemy.name)
+                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                    .foregroundColor(enemy.isAlive ? .white : .gray)
+                                Spacer()
+                                Text(enemyHealthStatus(enemy))
+                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .foregroundColor(getHealthColor(enemy))
+                            }
+                            .padding(4)
+                            .background(
+                                enemy.isAlive
+                                    ? Color.stoneDark.opacity(0.3) : Color.black.opacity(0.5))
+                        }
+                    }
+                    .padding(2)
+                }
+            }
+        }
+    }
+
+    // Helper for health description (Wizardry style)
+    private func enemyHealthStatus(_ enemy: Enemy) -> String {
+        if !enemy.isAlive { return "DEAD" }
+        let pct = Double(enemy.currentHP) / Double(enemy.maxHP)
+        if pct >= 1.0 { return "100%" }
+        if pct > 0.75 { return ">75%" }
+        if pct > 0.5 { return ">50%" }
+        if pct > 0.25 { return ">25%" }
+        return "CRIT"
     }
 }
 
-struct CombatGridButton: View {
-    let label: String
-    let color: Color
-    var disabled: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(disabled ? .gray : .white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(disabled ? Color.black : color.opacity(0.6))
-                .border(disabled ? Color.gray : color, width: 2)
-        }
-        .disabled(disabled)
-        .buttonStyle(PlainButtonStyle())
-    }
+// Shared Helper
+private func getHealthColor(_ combatant: Combatant) -> Color {
+    let pct = Double(combatant.currentHP) / Double(combatant.maxHP)
+    if pct < 0.25 { return .wizRed }
+    if pct < 0.5 { return .wizGold }
+    return .wizGreen
 }

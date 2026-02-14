@@ -6,9 +6,10 @@
 //
 
 final class PartyMembers {
-    private let members: [PartyMember]
+    private(set) var members: [PartyMember]
     private(set) var formation: [PartyPosition: PartyMember] = [:]
 
+    // Make init public if needed, or keep internal.
     init() {
         // Default Party Composition
         /*
@@ -78,6 +79,18 @@ final class PartyMembers {
         formation[.middleRight] = callista
         formation[.backLeft] = kyros
         formation[.backRight] = elias
+    }
+
+    func add(_ member: PartyMember) {
+        members.append(member)
+        // Auto-assign to empty slot if available?
+        // simple logic: fill next available slot
+        for position in PartyPosition.allCases {
+            if formation[position] == nil {
+                formation[position] = member
+                break
+            }
+        }
     }
 
     subscript(partyPosition: PartyPosition) -> PartyMember? {
