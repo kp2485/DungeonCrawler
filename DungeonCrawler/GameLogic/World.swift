@@ -15,6 +15,13 @@ final class World: ObservableObject, CombatDelegate {
     @Published private(set) var currentFloorIndex = 0
     @Published private(set) var enemies: [Enemy] = []
 
+    // Crystal Ball Statuses
+    @Published var enchantedBladeActive: Bool = false
+    @Published var armorplateActive: Bool = false
+    @Published var magicScreenActive: Bool = false
+    @Published var detectSecretActive: Bool = false
+    @Published var levitationActive: Bool = false
+
     // Game Log
     @Published private(set) var logs: [String] = []
 

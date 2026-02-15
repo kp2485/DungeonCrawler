@@ -35,13 +35,32 @@ struct ContentView: View {
 
             VStack(spacing: 0) {
                 // Top Info Bar
-                HStack {
+                // Top Info Bar - Crystal Balls
+                HStack(spacing: 12) {
                     Spacer()
-                    Text("DUNGEON LEVEL \(world.currentFloorIndex + 1)")
-                        .font(.custom("Courier", size: 16))
-                        .fontWeight(.bold)
-                        .foregroundColor(.wizGold)
-                        .shadow(color: .black, radius: 1, x: 1, y: 1)
+                    // 1. Enchanted Blade (Red)
+                    CrystalBall(
+                        color: .red, active: viewModel.enchantedBladeActive, label: "BLADE")
+
+                    // 2. Armorplate (Grey/White)
+                    CrystalBall(
+                        color: .white, active: viewModel.armorplateActive, label: "ARMOR")
+
+                    // 3. Magic Screen (Blue)
+                    CrystalBall(
+                        color: .blue, active: viewModel.magicScreenActive, label: "SCREEN")
+
+                    // 4. Detect Secret (Green + Pulse)
+                    CrystalBall(
+                        color: .green, active: viewModel.detectSecretActive, label: "SECRET",
+                        pulsating: true)
+
+                    // 5. Direction (Compass)
+                    CompassBall(direction: viewModel.compassDirection)
+
+                    // 6. Levitation (Cyan)
+                    CrystalBall(
+                        color: .cyan, active: viewModel.levitationActive, label: "FLOAT")
                     Spacer()
                 }
                 .frame(height: topBarHeight)
@@ -124,7 +143,7 @@ struct ContentView: View {
                     }
 
                     HStack(alignment: .top, spacing: 0) {
-                        // Command Buttons (Left Panel)
+                        // Command Buttons / Pentagram (Left Panel)
                         ZStack {
                             StoneBackground(bevel: false)
 
@@ -132,87 +151,30 @@ struct ContentView: View {
                                 CombatControlsView(viewModel: viewModel)
                                     .transition(.opacity)
                             } else {
-                                HStack(spacing: 8) {
-                                    // Action Group
-                                    VStack(spacing: 4 * scale) {
-                                        RetroButton(label: "FIGHT", scale: scale) { /* Attack */  }
-                                        RetroButton(label: "SPELL", scale: scale) { /* Cast */  }
-                                        RetroButton(label: "ITEMS", scale: scale) { /* Use Item */
+                                // Pentagram Interface
+                                PentagramView(
+                                    scale: scale,
+                                    onMove: { dir in
+                                        world.perform(.move(direction: dir))
+                                    },
+                                    onTurnClockwise: {
+                                        world.perform(.turnClockwise)
+                                    },
+                                    onTurnCounterClockwise: {
+                                        world.perform(.turnCounterClockwise)
+                                    },
+                                    onAction: { action in
+                                        print("Action triggered: \(action)")
+                                        // TODO: Implement specific actions
+                                        if action == "Camp" {
+                                            // Trigger rest?
                                         }
                                     }
-
-                                    // Movement Group
-                                    VStack(spacing: 4 * scale) {
-                                        RetroButton(label: "MOVE", scale: scale)
-                                        { /* Toggle Move */  }
-                                        HStack(spacing: 4 * scale) {
-                                            RetroButton(label: "Q", small: true, scale: scale) {
-                                                world.perform(.turnCounterClockwise)
-                                            }
-                                            RetroButton(label: "W", small: true, scale: scale) {
-                                                world.perform(.move(direction: .forward))
-                                            }
-                                            RetroButton(label: "E", small: true, scale: scale) {
-                                                world.perform(.turnClockwise)
-                                            }
-                                        }
-                                        RetroButton(label: "S", small: true, scale: scale) {
-                                            world.perform(.move(direction: .backwards))
-                                        }
-                                    }
-
-                                    // System Group
-                                    VStack(spacing: 4 * scale) {
-                                        RetroButton(label: "CAMP", scale: scale) { /* Rest */  }
-                                        // UI Sizing Control
-                                        Menu {
-                                            Text("UI Scale: \(Int(scale * 100))%")
-                                            Button("Reset") { viewModel.uiScale = 1.0 }
-                                            Divider()
-                                            Button("Increase (+)") {
-                                                viewModel.uiScale = min(
-                                                    viewModel.uiScale + 0.1, 1.5)
-                                            }
-                                            Button("Decrease (-)") {
-                                                viewModel.uiScale = max(
-                                                    viewModel.uiScale - 0.1, 0.5)
-                                            }
-                                        } label: {
-                                            ZStack {
-                                                // Button Face
-                                                LinearGradient(
-                                                    colors: [Color.stoneLight, Color.stoneMid],
-                                                    startPoint: .top,
-                                                    endPoint: .bottom
-                                                )
-
-                                                // Text
-                                                Text("SIZE")
-                                                    .font(
-                                                        .system(
-                                                            size: 12 * scale, weight: .bold,
-                                                            design: .monospaced)
-                                                    )
-                                                    .foregroundColor(.wizGold)
-                                                    .shadow(color: .black, radius: 1, x: 1, y: 1)
-
-                                                // Bevel
-                                                BevelBorder(width: 2 * scale, reversed: false)
-                                            }
-                                            .frame(width: 64 * scale, height: 28 * scale)
-                                        }
-                                    }
-                                }
-                                .padding(8)
+                                )
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                             }
                         }
                         .frame(width: 280)  // Fixed width for buttons
-
-                        // Separator
-                        Rectangle()
-                            .fill(Color.stoneDark)
-                            .frame(width: 4)
-                            .overlay(BevelBorder(width: 1))
 
                         // Game Log (Center Panel)
                         InsetPanel {
@@ -300,7 +262,6 @@ struct ContentView: View {
             }, alignment: .top
         )
     }
-    
 
     private func triggerEffect(_ effect: CombatVisualEffect) {
         switch effect {
@@ -328,15 +289,13 @@ struct PartyMemberPortrait: View {
     let stats: PartyMemberStats
     var alignRight: Bool = false
     var sideColumnWidth: CGFloat
-    var sideColumnHeight: CGFloat  // Now receiving specific height for this item
+    var sideColumnHeight: CGFloat
     var scale: CGFloat = 1.0
 
     var body: some View {
-        let availableWidth = sideColumnWidth - 16  // 12 padding (6*2) + 4 spacing
+        let availableWidth = sideColumnWidth - 16
         let barWidth = availableWidth * 0.25
         let portraitWidth = availableWidth * 0.75
-
-        // We use the passed sideColumnHeight as the strict height for this component
         let contentHeight = sideColumnHeight
 
         HStack(spacing: 4) {
@@ -346,21 +305,20 @@ struct PartyMemberPortrait: View {
                     .frame(width: barWidth, height: contentHeight)
             }
 
-            // Portrait Slot
+            // Portrait & Info Slot
             ZStack {
                 // Background
                 Color.black
 
-                // Generic Portrait (Placeholder)
+                // Portrait Image (Placeholder)
                 Image(systemName: "person.fill")
                     .resizable()
-                    .aspectRatio(contentMode: .fit)  // Enforce aspect ratio on image
+                    .aspectRatio(contentMode: .fit)
                     .foregroundColor(.stoneLight)
                     .padding(8)
                     .opacity(0.3)
 
                 // Name Overlay (Bottom)
-                // Use geometry reader to pin to bottom of the actual frame
                 VStack {
                     Spacer()
                     Text(stats.name)
@@ -375,7 +333,10 @@ struct PartyMemberPortrait: View {
                 VStack {
                     HStack {
                         Text(stats.name.prefix(2).uppercased())
-                            .font(.system(size: 20 * scale, weight: .heavy, design: .monospaced))
+                            .font(
+                                .system(
+                                    size: 20 * scale, weight: .heavy, design: .monospaced)
+                            )
                             .foregroundColor(.white.opacity(0.4))
                             .padding(2)
                         Spacer()
@@ -383,21 +344,45 @@ struct PartyMemberPortrait: View {
                     Spacer()
                 }
 
-                // Condition Badges (Top Right)
-                if !stats.conditions.isEmpty {
-                    VStack {
-                        HStack {
-                            Spacer()
-                            ForEach(Array(stats.conditions.prefix(2)), id: \.self) { condition in
-                                Circle()
-                                    .fill(Color.wizRed)
-                                    .frame(width: 8, height: 8)
-                                    .overlay(Circle().stroke(Color.white, lineWidth: 1))
+                // Weapon & Condition Overlay (Right Side of Portrait)
+                HStack {
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        // Weapons (Primary / Secondary)
+                        // Mocking weapon icons for now
+                        Image(systemName: "sword")
+                            .font(.system(size: 10 * scale))
+                            .foregroundColor(.white)
+                            .frame(width: 16 * scale, height: 16 * scale)
+                            .background(Color.black.opacity(0.6))
+                            .border(Color.stoneLight, width: 1)
+
+                        Image(systemName: "shield")
+                            .font(.system(size: 10 * scale))
+                            .foregroundColor(.white)
+                            .frame(width: 16 * scale, height: 16 * scale)
+                            .background(Color.black.opacity(0.6))
+                            .border(Color.stoneLight, width: 1)
+
+                        Spacer()
+
+                        // Conditions Row
+                        if !stats.conditions.isEmpty {
+                            VStack(spacing: 1) {
+                                ForEach(
+                                    Array(stats.conditions.prefix(3)), id: \.self
+                                ) { condition in
+                                    // Small icon representation
+                                    Circle()
+                                        .fill(Color.wizRed)
+                                        .frame(width: 6, height: 6)
+                                        .overlay(
+                                            Circle().stroke(Color.white, lineWidth: 0.5))
+                                }
                             }
                         }
-                        .padding(2)
-                        Spacer()
                     }
+                    .padding(2)
                 }
             }
             .frame(width: portraitWidth, height: contentHeight)
@@ -419,7 +404,6 @@ struct PartyMemberPortrait: View {
                 BevelBorder(width: 2, reversed: false)
             }
         )
-        // No vertical padding needed on the container itself as we calculated exact height
     }
 }
 
@@ -428,12 +412,17 @@ struct StatusBars: View {
 
     var body: some View {
         HStack(spacing: 2) {
-            // HP
-            VariableVerticalBar(color: .wizRed, current: stats.currentHP, max: stats.maxHP)
-            // MP
-            VariableVerticalBar(color: .wizBlue, current: stats.currentMana, max: stats.maxMana)
-            // Stamina (Placeholder)
-            VariableVerticalBar(color: .wizGreen, current: 100, max: 100)
+            // HP (Red)
+            VariableVerticalBar(
+                color: .wizRed, current: stats.currentHP, max: stats.maxHP)
+
+            // Stamina (Yellow)
+            VariableVerticalBar(
+                color: .yellow, current: stats.currentStamina, max: stats.maxStamina)
+
+            // MP (Blue)
+            VariableVerticalBar(
+                color: .wizBlue, current: stats.currentMana, max: stats.maxMana)
         }
         .padding(2)
         .background(Color.black)

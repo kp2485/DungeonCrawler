@@ -35,6 +35,14 @@ final class ViewModel: ObservableObject {
     // UI Settings
     @Published var uiScale: CGFloat = 1.0
 
+    // Crystal Ball Statuses
+    var enchantedBladeActive: Bool { world.enchantedBladeActive }
+    var armorplateActive: Bool { world.armorplateActive }
+    var magicScreenActive: Bool { world.magicScreenActive }
+    var detectSecretActive: Bool { world.detectSecretActive }
+    var levitationActive: Bool { world.levitationActive }
+    var compassDirection: CompassDirection { world.partyHeading }
+
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
 
@@ -191,6 +199,8 @@ struct PartyMemberStats {
     let maxHP: Int
     let currentMana: Int
     let maxMana: Int
+    let currentStamina: Int
+    let maxStamina: Int
     let conditions: [String]
 
     init(partyMember: PartyMember) {
@@ -200,12 +210,14 @@ struct PartyMemberStats {
         self.maxHP = partyMember.maxHP
         self.currentMana = partyMember.currentMana
         self.maxMana = partyMember.maxMana
+        self.currentStamina = partyMember.currentStamina
+        self.maxStamina = partyMember.maxStamina
         self.conditions = partyMember.activeConditions.map { $0.condition.name }
     }
 
     private init(
         name: String, title: String, currentHP: Int, maxHP: Int, currentMana: Int, maxMana: Int,
-        conditions: [String]
+        currentStamina: Int, maxStamina: Int, conditions: [String]
     ) {
         self.name = name
         self.title = title
@@ -213,11 +225,14 @@ struct PartyMemberStats {
         self.maxHP = maxHP
         self.currentMana = currentMana
         self.maxMana = maxMana
+        self.currentStamina = currentStamina
+        self.maxStamina = maxStamina
         self.conditions = conditions
     }
 
     static let empty = PartyMemberStats(
-        name: "Empty", title: "", currentHP: 0, maxHP: 1, currentMana: 0, maxMana: 1, conditions: []
+        name: "Empty", title: "", currentHP: 0, maxHP: 1, currentMana: 0, maxMana: 1,
+        currentStamina: 0, maxStamina: 1, conditions: []
     )
 }
 

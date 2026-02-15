@@ -13,6 +13,7 @@ final class PartyMember: Combatant, Identifiable, Codable {
     let title: String
     var currentHP: Int
     var currentMana: Int
+    var currentStamina: Int
     var currentInitiative: Int = 0
     var attributes: Attributes
     let abilities: [Ability]
@@ -20,6 +21,7 @@ final class PartyMember: Combatant, Identifiable, Codable {
     var cooldowns: [UUID: Int] = [:]
     var inventory: [Item] = []
     var equippedWeapon: Weapon?
+    var equippedSecondaryWeapon: Weapon?
 
     var sex: Sex
     var gender: Gender
@@ -34,6 +36,10 @@ final class PartyMember: Combatant, Identifiable, Codable {
 
     var maxMana: Int {
         attributes.wisdom * 2
+    }
+
+    var maxStamina: Int {
+        attributes.constitution * 2
     }
 
     var currentXP: Int = 0
@@ -71,6 +77,7 @@ final class PartyMember: Combatant, Identifiable, Codable {
         self.abilities = profession.startingAbilities
         self.currentHP = attributes.endurance * 2
         self.currentMana = attributes.wisdom * 2
+        self.currentStamina = attributes.constitution * 2
     }
 
     func takeDamage(_ amount: Int) {
