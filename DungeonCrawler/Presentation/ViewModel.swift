@@ -28,6 +28,11 @@ final class ViewModel: ObservableObject {
 
     @Published var availablePartyMembers: [PartyMember] = []
 
+    // Interaction UI State
+    @Published var isInteracting: Bool = false
+    @Published var interactionTarget: Coordinate?
+    @Published var interactionObject: InteractiveObject?  // Snapshot or reference
+
     // Visual Effects
     @Published var lastVisualEffect: CombatVisualEffect?
     private var lastObservedEffectId: UUID?
@@ -42,6 +47,14 @@ final class ViewModel: ObservableObject {
     var detectSecretActive: Bool { world.detectSecretActive }
     var levitationActive: Bool { world.levitationActive }
     var compassDirection: CompassDirection { world.partyHeading }
+
+    var interactablePartyMembers: [PartyMember] {
+        return world.partyMembers.alivePartyMembers
+    }
+
+    var activePartyMemberNames: [String] {
+        return interactablePartyMembers.map { $0.name }
+    }
 
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()

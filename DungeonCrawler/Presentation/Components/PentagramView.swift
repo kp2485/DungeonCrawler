@@ -76,8 +76,10 @@ struct PentagramView: View {
             .offset(x: -60 * scale, y: -40 * scale)
 
             // Top Right
-            PentagramActionButton(label: "CAMP", icon: "tent", angle: 135, scale: scale) {
-                onAction("Camp")
+            PentagramActionButton(
+                label: "OPEN", icon: "door.left.hand.open", angle: 135, scale: scale
+            ) {
+                onAction("Open")
             }
             .offset(x: 60 * scale, y: -40 * scale)
 

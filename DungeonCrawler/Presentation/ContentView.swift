@@ -165,8 +165,15 @@ struct ContentView: View {
                                     },
                                     onAction: { action in
                                         print("Action triggered: \(action)")
-                                        // TODO: Implement specific actions
-                                        if action == "Camp" {
+                                        if action == "Open" {
+                                            if let (coord, obj) = world.getObjectInFront() {
+                                                viewModel.interactionTarget = coord
+                                                viewModel.interactionObject = obj
+                                                viewModel.isInteracting = true
+                                            } else {
+                                                world.log("Nothing to open there.")
+                                            }
+                                        } else if action == "Camp" {
                                             // Trigger rest?
                                         }
                                     }
@@ -187,6 +194,7 @@ struct ContentView: View {
                                                 .foregroundColor(.wizGreen)
                                                 .frame(maxWidth: .infinity, alignment: .leading)
                                         }
+                                        Spacer()
                                     }
                                     .padding(4)
                                 }
@@ -235,7 +243,18 @@ struct ContentView: View {
                 .overlay(BevelBorder(width: 3, reversed: false))
             }
             .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity)
             .zIndex(0)
+
+            // Interaction Overlay
+            if viewModel.isInteracting {
+                Color.black.opacity(0.8).edgesIgnoringSafeArea(.all)
+
+                InteractionView(viewModel: viewModel)
+                    .frame(width: 400, height: 300)
+                    .transition(.scale)
+                    .zIndex(100)
+            }
         }
 
         #if os(iOS) || os(tvOS)

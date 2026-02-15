@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Item: Identifiable, Codable {
+struct Item: Identifiable, Codable, Hashable {
     var id: UUID = UUID()
     let name: String
     let description: String
@@ -15,7 +15,7 @@ struct Item: Identifiable, Codable {
     let power: Int  // Heal amount, etc.
 }
 
-enum ItemType: String, Codable {
+enum ItemType: String, Codable, Hashable {
     case potion  // Heals HP
     case manaPotion  // Restores Mana
     case revive  // Revives dead (not implemented yet maybe)
