@@ -32,6 +32,9 @@ final class ViewModel: ObservableObject {
     @Published var lastVisualEffect: CombatVisualEffect?
     private var lastObservedEffectId: UUID?
 
+    // UI Settings
+    @Published var uiScale: CGFloat = 1.0
+
     // Store cancellables if we use Combine, or just poll in update
     private var cancellables = Set<AnyCancellable>()
 

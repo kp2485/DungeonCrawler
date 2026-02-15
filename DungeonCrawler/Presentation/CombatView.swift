@@ -30,13 +30,14 @@ struct CombatControlsView: View {
     var body: some View {
         ZStack {
             StoneBackground(bevel: false)
+            let scale = viewModel.uiScale
 
             if let member = viewModel.currentSelectionMember {
                 VStack(spacing: 4) {
                     // Turn Indicator
                     HStack {
                         Text(member.name)
-                            .font(.system(size: 14, weight: .bold, design: .monospaced))  // Monospaced for retro feel
+                            .font(.system(size: 14 * scale, weight: .bold, design: .monospaced))  // Monospaced for retro feel
                             .foregroundColor(Color.wizGold)
                             .shadow(color: .black, radius: 1, x: 1, y: 1)
                         Spacer()
@@ -54,7 +55,7 @@ struct CombatControlsView: View {
                         case .items:
                             itemsMenu(member: member)
                         case .targets(let context):
-                            targetsMenu(member: member, context: context)
+                            targetsMenu(member: member, context: context, scale: scale)
                         }
                     }
                     .frame(maxHeight: .infinity, alignment: .top)
@@ -63,7 +64,7 @@ struct CombatControlsView: View {
                     if case .main = menuState {
                         // No back button on main menu
                     } else {
-                        RetroButton(label: "BACK", small: true) {
+                        RetroButton(label: "BACK", small: true, scale: scale) {
                             menuState = .main
                             selectedActionContext = nil
                         }
@@ -72,7 +73,7 @@ struct CombatControlsView: View {
                 }
             } else {
                 Text("Waiting...")
-                    .font(.custom("Courier", size: 14))
+                    .font(.custom("Courier", size: 14 * scale))
                     .foregroundColor(.stoneLight)
             }
         }
@@ -86,7 +87,8 @@ struct CombatControlsView: View {
     // MARK: - Menus
 
     private func mainMenuGrid(member: PartyMember) -> some View {
-        LazyVGrid(
+        let scale = viewModel.uiScale
+        return LazyVGrid(
             columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
@@ -94,23 +96,23 @@ struct CombatControlsView: View {
         ) {
 
             // Row 1
-            RetroButton(label: "FIGHT") {
+            RetroButton(label: "FIGHT", scale: scale) {
                 menuState = .targets(.attack)
             }
-            RetroButton(label: "SPELL") {
+            RetroButton(label: "SPELL", scale: scale) {
                 menuState = .abilities
             }
 
             // Row 2
-            RetroButton(label: "DEFEND") {
+            RetroButton(label: "DEFEND", scale: scale) {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .defend)
             }
-            RetroButton(label: "ITEM") {
+            RetroButton(label: "ITEM", scale: scale) {
                 menuState = .items
             }
 
             // Row 3 (Full Width Options)
-            RetroButton(label: "RUN") {
+            RetroButton(label: "RUN", scale: scale) {
                 viewModel.world.combatEngine?.selectAction(for: member, action: .run)
             }
         }
@@ -118,8 +120,9 @@ struct CombatControlsView: View {
     }
 
     private func abilitiesMenu(member: PartyMember) -> some View {
-        VStack(spacing: 4) {
-            Text("Select Ability").font(.system(size: 10)).foregroundColor(.stoneLight)
+        let scale = viewModel.uiScale
+        return VStack(spacing: 4 * scale) {
+            Text("Select Ability").font(.system(size: 10 * scale)).foregroundColor(.stoneLight)
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(member.abilities, id: \.self) { ability in
@@ -128,11 +131,11 @@ struct CombatControlsView: View {
                         }) {
                             HStack {
                                 Text(ability.name)
-                                    .font(.system(size: 12, design: .monospaced))
+                                    .font(.system(size: 12 * scale, design: .monospaced))
                                     .foregroundColor(.white)
                                 Spacer()
                                 Text("\(ability.manaCost) MP")
-                                    .font(.system(size: 10, design: .monospaced))
+                                    .font(.system(size: 10 * scale, design: .monospaced))
                                     .foregroundColor(.wizBlue)
                             }
                             .padding(4)
@@ -149,8 +152,9 @@ struct CombatControlsView: View {
     }
 
     private func itemsMenu(member: PartyMember) -> some View {
-        VStack(spacing: 4) {
-            Text("Select Item").font(.system(size: 10)).foregroundColor(.stoneLight)
+        let scale = viewModel.uiScale
+        return VStack(spacing: 4 * scale) {
+            Text("Select Item").font(.system(size: 10 * scale)).foregroundColor(.stoneLight)
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(member.inventory, id: \.id) { item in
@@ -159,7 +163,7 @@ struct CombatControlsView: View {
                         }) {
                             HStack {
                                 Text(item.name)
-                                    .font(.system(size: 12, design: .monospaced))
+                                    .font(.system(size: 12 * scale, design: .monospaced))
                                     .foregroundColor(.white)
                                 Spacer()
                             }
@@ -175,9 +179,11 @@ struct CombatControlsView: View {
         .padding(4)
     }
 
-    private func targetsMenu(member: PartyMember, context: ActionContext) -> some View {
-        VStack(spacing: 4) {
-            Text("Select Target").font(.system(size: 10)).foregroundColor(.stoneLight)
+    private func targetsMenu(member: PartyMember, context: ActionContext, scale: CGFloat)
+        -> some View
+    {
+        VStack(spacing: 4 * scale) {
+            Text("Select Target").font(.system(size: 10 * scale)).foregroundColor(.stoneLight)
 
             InsetPanel {
                 ScrollView {
@@ -192,11 +198,11 @@ struct CombatControlsView: View {
                             }) {
                                 HStack {
                                     Text(target.name)
-                                        .font(.system(size: 12, design: .monospaced))
+                                        .font(.system(size: 12 * scale, design: .monospaced))
                                         .foregroundColor(target.isAlive ? .white : .gray)
                                     Spacer()
                                     Text("\(target.currentHP)/\(target.maxHP) HP")
-                                        .font(.system(size: 10, design: .monospaced))
+                                        .font(.system(size: 10 * scale, design: .monospaced))
                                         .foregroundColor(getHealthColor(target))
                                 }
                                 .padding(4)
@@ -271,10 +277,11 @@ struct CombatEnemyListView: View {
     @ObservedObject var viewModel: ViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let scale = viewModel.uiScale
+        return VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text("ENEMIES")
-                    .font(.system(size: 10, weight: .bold))
+                    .font(.system(size: 10 * scale, weight: .bold))
                     .foregroundColor(.stoneLight)
                 Spacer()
             }
@@ -287,11 +294,17 @@ struct CombatEnemyListView: View {
                         ForEach(viewModel.availableEnemies) { enemy in
                             HStack {
                                 Text(enemy.name)
-                                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                                    .font(
+                                        .system(
+                                            size: 12 * scale, weight: .bold, design: .monospaced)
+                                    )
                                     .foregroundColor(enemy.isAlive ? .white : .gray)
                                 Spacer()
                                 Text(enemyHealthStatus(enemy))
-                                    .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                    .font(
+                                        .system(
+                                            size: 10 * scale, weight: .bold, design: .monospaced)
+                                    )
                                     .foregroundColor(getHealthColor(enemy))
                             }
                             .padding(4)

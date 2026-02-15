@@ -152,6 +152,7 @@ struct RetroButton: View {
     let label: String
     var small: Bool = false
     var width: CGFloat? = nil
+    var scale: CGFloat = 1.0  // New scale parameter
     let action: () -> Void
 
     var body: some View {
@@ -166,14 +167,18 @@ struct RetroButton: View {
 
                 // Text
                 Text(label)
-                    .font(.system(size: small ? 10 : 12, weight: .bold, design: .monospaced))
+                    // Scale the font size
+                    .font(
+                        .system(size: (small ? 10 : 12) * scale, weight: .bold, design: .monospaced)
+                    )
                     .foregroundColor(.wizGold)
                     .shadow(color: .black, radius: 1, x: 1, y: 1)
 
                 // Bevel
-                BevelBorder(width: 2, reversed: false)
+                BevelBorder(width: 2 * scale, reversed: false)
             }
-            .frame(width: width ?? (small ? 30 : 64), height: small ? 20 : 28)
+            // Scale the frame
+            .frame(width: (width ?? (small ? 30 : 64)) * scale, height: (small ? 20 : 28) * scale)
         }
         .buttonStyle(PlainButtonStyle())
     }
