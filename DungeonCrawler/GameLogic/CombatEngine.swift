@@ -467,7 +467,7 @@ final class CombatEngine: ObservableObject {
         if components.count > 1, let mod = Int(components[1]) {
             modifier = mod
             dicePart = components[0]
-        } else if let modIndex = formula.lastIndex(of: "-") {
+        } else if formula.lastIndex(of: "-") != nil {
             // Handle negative modifier simple case if needed, but for now assuming XdY+Z
             // Parsing - is trickier without regex, assuming + for now based on examples
         }
@@ -698,6 +698,8 @@ final class CombatEngine: ObservableObject {
             }
         case .revive:
             delegate.log("Revive not implemented.")
+        default:
+            delegate.log("Nothing happens. (Unhandled item type: \(item.type))")
         }
     }
 
@@ -743,3 +745,4 @@ final class CombatEngine: ObservableObject {
         return false
     }
 }
+

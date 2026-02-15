@@ -51,13 +51,15 @@ struct Map {
                     readObjects[coord] = InteractiveObject(state: .door(.open))
                     readTiles[coord] = .wall
                 } else if char == "L" {
-                    readObjects[coord] = InteractiveObject(state: .door(.locked(difficulty: 10)))
+                    readObjects[coord] = InteractiveObject(
+                        state: .door(.locked(difficulty: 10, keyId: nil)))
                     readTiles[coord] = .wall
                 } else if char == "C" {
                     readObjects[coord] = InteractiveObject(state: .chest(.closed))
                     readTiles[coord] = .floor
                 } else if char == "l" {
-                    readObjects[coord] = InteractiveObject(state: .chest(.locked(difficulty: 10)))
+                    readObjects[coord] = InteractiveObject(
+                        state: .chest(.locked(difficulty: 10, keyId: nil)))
                     readTiles[coord] = .floor
                 } else {
                     let tile = Tile.characterToTile(char)

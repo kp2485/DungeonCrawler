@@ -13,11 +13,13 @@ struct Item: Identifiable, Codable, Hashable {
     let description: String
     let type: ItemType
     let power: Int  // Heal amount, etc.
+    var keyId: Int?  // If type == .key, this ID matches a lock
 }
 
 enum ItemType: String, Codable, Hashable {
     case potion  // Heals HP
     case manaPotion  // Restores Mana
     case revive  // Revives dead (not implemented yet maybe)
+    case key  // Unlocks doors/chests
     // case weapon, armor
 }

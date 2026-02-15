@@ -111,8 +111,9 @@ class MapUpdateSystem: System {
                         // Let's assume default model is "Door in a Wall running East-West", so facing North/South.
 
                         // Check tiles:
-                        let isWallLeft = world.currentFloor.tileAt(left) == .wall
-                        let isWallRight = world.currentFloor.tileAt(right) == .wall
+                        // Check tiles:
+                        let _ = world.currentFloor.tileAt(left) == .wall
+                        let _ = world.currentFloor.tileAt(right) == .wall
 
                         // If walls are Left and Right, the "Wall" line is Horizontal. The Door fits into that Wall.
                         // So the Door Plane is East-West. (Facing North/South).
@@ -187,22 +188,27 @@ class MapUpdateSystem: System {
             // Specific Programmatic Fallbacks
             switch model {
             case "Door_Closed":
-                entity = createCube(worldPosition: .zero, color: .brown, size: 0.9).children[0]
+                entity = createCube(worldPosition: .zero, color: .brown, size: 1.0).children[0]
+                entity.scale = SIMD3<Float>(1.0, 2.2, 0.2)  // Tall and thin
+                entity.position.y = 1.1  // Move UP so bottom is at 0 (approx, since box is 1.0 height unscaled? Wait. 1.0*2.2 = 2.2 height. Center at 0 -> -1.1 to 1.1. Move up 1.1 -> 0 to 2.2)
             case "Door_Open":
                 // Open door: Thinner, maybe offset? Or just a frame?
                 // For now, a thin slab to the side or transparent?
                 // Let's make it a thin "Open" slab.
                 entity =
                     createCube(
-                        worldPosition: .zero, color: .brown.withAlphaComponent(0.5), size: 0.9
+                        worldPosition: .zero, color: .brown.withAlphaComponent(0.5), size: 1.0
                     ).children[0]
                 // Scale it to look like an open door against the wall?
                 // Complex without full model. Let's just make it a smaller/different color cube.
-                entity.scale = SIMD3<Float>(0.1, 1.0, 1.0)  // Thin slice
+                entity.scale = SIMD3<Float>(0.2, 2.2, 1.0)  // Open door (rotated 90 effectively or just side jamb?)
+                entity.position.y = 1.1
             case "Chest_Closed":
                 entity = createCube(worldPosition: .zero, color: .yellow, size: 0.5).children[0]
+                entity.position.y = 0.7  // Raised to clear 0.4 half-height of floor fallback + 0.25 half-height of self
             case "Chest_Open":
                 entity = createCube(worldPosition: .zero, color: .gray, size: 0.5).children[0]
+                entity.position.y = 0.7
             default:
                 entity = createCube(worldPosition: .zero, color: .gray).children[0]
             }

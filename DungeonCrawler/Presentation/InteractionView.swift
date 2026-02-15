@@ -102,13 +102,13 @@ struct InteractionView: View {
             switch state {
             case .open: return "Open Door"
             case .closed: return "Closed Door"
-            case .locked(let diff): return "Locked Door (Diff: \(diff))"
+            case .locked(let diff, _): return "Locked Door (Diff: \(diff))"
             }
         case .chest(let state):
             switch state {
             case .open: return "Open Chest"
             case .closed: return "Closed Chest"
-            case .locked(let diff): return "Locked Chest (Diff: \(diff))"
+            case .locked(let diff, _): return "Locked Chest (Diff: \(diff))"
             }
         }
     }

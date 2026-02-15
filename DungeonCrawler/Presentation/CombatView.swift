@@ -237,6 +237,8 @@ struct CombatControlsView: View {
             switch item.type {
             case .potion, .manaPotion, .revive:  // Allies
                 return viewModel.availablePartyMembers
+            case .key:
+                return []
             }
         }
     }

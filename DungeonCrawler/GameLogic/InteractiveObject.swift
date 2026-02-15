@@ -8,13 +8,13 @@ enum InteractiveObjectState: Equatable, Hashable {
 enum DoorState: Equatable, Hashable {
     case open
     case closed
-    case locked(difficulty: Int)
+    case locked(difficulty: Int, keyId: Int?)
 }
 
 enum ChestState: Equatable, Hashable {
     case open
     case closed
-    case locked(difficulty: Int)
+    case locked(difficulty: Int, keyId: Int?)
 }
 
 struct InteractiveObject: Identifiable, Equatable, Hashable {

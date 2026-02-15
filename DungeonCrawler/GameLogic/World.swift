@@ -31,7 +31,7 @@ final class World: ObservableObject, CombatDelegate {
         return combatEngine != nil
     }
 
-    private var floors: [Map]
+    var floors: [Map]
     let partyMembers = PartyMembers()
 
     func log(_ message: String) {
@@ -252,7 +252,7 @@ final class World: ObservableObject, CombatDelegate {
 
         switch object.state {
         case .door(let state):
-            if case .locked(let difficulty) = state {
+            if case .locked(let difficulty, _) = state {
                 resolveLockInteraction(
                     method: method, difficulty: difficulty, member: member, object: &object,
                     coordinate: coordinate)
@@ -263,7 +263,7 @@ final class World: ObservableObject, CombatDelegate {
                 log("\(member.name) opens the door.")
             }
         case .chest(let state):
-            if case .locked(let difficulty) = state {
+            if case .locked(let difficulty, _) = state {
                 resolveLockInteraction(
                     method: method, difficulty: difficulty, member: member, object: &object,
                     coordinate: coordinate)
@@ -297,8 +297,34 @@ final class World: ObservableObject, CombatDelegate {
             log("\(member.name) casts Knock! Success!")
         case .item:
             // Check for key?
-            success = true  // customized later
-            log("\(member.name) uses a key. Success!")
+            var hasKey = false
+            var requiredKeyId: Int? = nil
+
+            if case .door(let state) = object.state, case .locked(_, let keyId) = state {
+                requiredKeyId = keyId
+            } else if case .chest(let state) = object.state, case .locked(_, let keyId) = state {
+                requiredKeyId = keyId
+            }
+
+            if let reqId = requiredKeyId {
+                // Check if any party member has the key
+                for member in partyMembers.members {
+                    if member.inventory.contains(where: { $0.type == .key && $0.keyId == reqId }) {
+                        hasKey = true
+                        log("\(member.name) uses the key.")
+                        break
+                    }
+                }
+
+                if !hasKey {
+                    log("You don't have the right key.")
+                }
+                success = hasKey
+            } else {
+                // No specific key required? fallback to generic item or just fail
+                log("No key hole found.")
+                success = false
+            }
         }
 
         if success {
@@ -317,10 +343,13 @@ final class World: ObservableObject, CombatDelegate {
         object.state = InteractiveObjectState.chest(.open)
         log("Chest opened! Found: \(object.content.map{$0.name}.joined(separator: ", "))")
         // Give items
+        // Give items
         for item in object.content {
-            // Give to first member or party pool?
-            // partyMembers.give(item) - implementation detail
-            // For now just log
+            // Give to first member for now
+            if let recipient = partyMembers.members.first {
+                recipient.inventory.append(item)
+                log("\(recipient.name) received \(item.name).")
+            }
         }
         object.content = []  // Empty it
         updateObject(object, at: coordinate)
@@ -420,7 +449,7 @@ func makeWorld(_ floorStrings: [String]) -> World {
         startingPosition: Coordinate?, enemies: [Coordinate]
     ) {
         // lets try and find a starting position
-        var enemies = [Coordinate]()
+        let enemies = [Coordinate]()
         var startingPosition: Coordinate?
 
         for y in 0..<characterMatrix.count {
