@@ -1,0 +1,236 @@
+{
+  "" : {
+    "const-values" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary.swiftconstvalues",
+    "dependencies" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary.d",
+    "diagnostics" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary.dia",
+    "emit-module-dependencies" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary-emit-module.dia",
+    "pch" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawler-primary.swiftdeps"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/DungeonCrawlerApp.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawlerApp.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawlerApp.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/DungeonCrawlerApp.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Abilities.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Abilities.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Abilities.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Abilities.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Attributes.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Attributes.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Attributes.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Attributes.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/CharacterCreator.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreator.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreator.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreator.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/CombatDelegate.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatDelegate.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatDelegate.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatDelegate.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/CombatEngine.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEngine.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEngine.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEngine.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/CombatEnums.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEnums.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEnums.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatEnums.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/CombatVisualEffect.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatVisualEffect.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatVisualEffect.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatVisualEffect.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Coordinate.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Coordinate.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Coordinate.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Coordinate.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Direction.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Direction.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Direction.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Direction.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Enemy.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Enemy.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Enemy.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Enemy.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/EncyclopediaA.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/EncyclopediaA_Part1.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part1.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part1.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part1.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/EncyclopediaA_Part2.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part2.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part2.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part2.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/EncyclopediaA_Part3.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part3.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part3.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EncyclopediaA_Part3.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/GreekPantheon.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GreekPantheon.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GreekPantheon.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GreekPantheon.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/MasterAbilities.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MasterAbilities.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MasterAbilities.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MasterAbilities.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/MythologicalCharacter.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalCharacter.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalCharacter.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalCharacter.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/MythologicalTypes.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalTypes.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalTypes.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MythologicalTypes.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/InteractionMethod.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionMethod.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionMethod.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionMethod.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/InteractiveObject.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractiveObject.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractiveObject.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractiveObject.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Item.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Item.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Item.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Item.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Map.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Map.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Map.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Map.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/PartyMember.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMember.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMember.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMember.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/PartyMembers.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMembers.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMembers.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PartyMembers.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Player.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Player.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Player.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Player.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Profession.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Profession.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Profession.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Profession.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/Weapon.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Weapon.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Weapon.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Weapon.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/World.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/World.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/World.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/World.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/CharacterCreationView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreationView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreationView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CharacterCreationView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/CombatView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CombatView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/Components/CrystalBalls.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CrystalBalls.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CrystalBalls.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/CrystalBalls.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/Components/PentagramView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PentagramView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PentagramView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/PentagramView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/ContentView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ContentView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ContentView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ContentView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/EnemyUpdateSystem.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EnemyUpdateSystem.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EnemyUpdateSystem.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/EnemyUpdateSystem.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/Extensions.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Extensions.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Extensions.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Extensions.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/GameView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GameView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GameView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GameView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/InteractionView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/InteractionView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/MainCoordinator.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MainCoordinator.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MainCoordinator.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MainCoordinator.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/MapUpdateSystem.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MapUpdateSystem.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MapUpdateSystem.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/MapUpdateSystem.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/StartScreenView.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/StartScreenView.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/StartScreenView.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/StartScreenView.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/Styles.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Styles.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Styles.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/Styles.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/ViewModel.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ViewModel.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ViewModel.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/ViewModel.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/WorldUpdateSystem.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/WorldUpdateSystem.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/WorldUpdateSystem.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/WorldUpdateSystem.o"
+  },
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "index-unit-output-path" : "/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/arm64/GeneratedAssetSymbols.o"
+  }
+}

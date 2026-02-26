@@ -191,6 +191,52 @@ class MapUpdateSystem: System {
         return wallAnchor
     }
 
+    private func createDoorEntity(open: Bool) -> Entity {
+        let parent = Entity()
+
+        let wallMaterial = SimpleMaterial(color: .lightGray, isMetallic: false)
+        var doorMaterial = SimpleMaterial(color: .brown, isMetallic: false)
+        doorMaterial.roughness = 0.8
+
+        let leftPillar = Entity(components: [
+            ModelComponent(
+                mesh: .generateBox(size: SIMD3<Float>(0.25, 1.0, 0.05)), materials: [wallMaterial])
+        ])
+        leftPillar.position = [-0.375, 0.5, 0]
+        parent.addChild(leftPillar)
+
+        let rightPillar = Entity(components: [
+            ModelComponent(
+                mesh: .generateBox(size: SIMD3<Float>(0.25, 1.0, 0.05)), materials: [wallMaterial])
+        ])
+        rightPillar.position = [0.375, 0.5, 0]
+        parent.addChild(rightPillar)
+
+        let topLintel = Entity(components: [
+            ModelComponent(
+                mesh: .generateBox(size: SIMD3<Float>(0.5, 0.2, 0.05)), materials: [wallMaterial])
+        ])
+        topLintel.position = [0, 0.9, 0]
+        parent.addChild(topLintel)
+
+        let hinge = Entity()
+        hinge.position = [-0.25, 0, 0]
+        parent.addChild(hinge)
+
+        let door = Entity(components: [
+            ModelComponent(
+                mesh: .generateBox(size: SIMD3<Float>(0.5, 0.8, 0.05)), materials: [doorMaterial])
+        ])
+        door.position = [0.25, 0.4, 0]
+        hinge.addChild(door)
+
+        if open {
+            hinge.orientation = simd_quatf(angle: .pi / 2, axis: [0, 1, 0])
+        }
+
+        return parent
+    }
+
     private func placeModelAt(
         model: String, worldPosition: SIMD3<Float>, orientation: simd_quatf? = nil
     ) -> AnchorEntity {
@@ -206,16 +252,9 @@ class MapUpdateSystem: System {
             entity.scale = SIMD3<Float>(1.0, 0.05, 1.0)
             entity.position.y = 1.025
         case "Door_Closed":
-            entity = createCube(worldPosition: .zero, color: .brown, size: 1.0).children[0]
-            entity.scale = SIMD3<Float>(1.0, 1.0, 0.2)
-            entity.position.y = 0.5
+            entity = createDoorEntity(open: false)
         case "Door_Open":
-            entity =
-                createCube(worldPosition: .zero, color: .brown.withAlphaComponent(0.5), size: 1.0)
-                .children[0]
-            entity.scale = SIMD3<Float>(0.2, 1.0, 1.0)
-            entity.position.y = 0.5
-            entity.position.x = -0.4
+            entity = createDoorEntity(open: true)
         case "Chest_Closed":
             entity = createCube(worldPosition: .zero, color: .yellow, size: 0.5).children[0]
             entity.position.y = 0.25
