@@ -22,6 +22,9 @@ final class World: ObservableObject, CombatDelegate {
     @Published var detectSecretActive: Bool = false
     @Published var levitationActive: Bool = false
 
+    // Map Exploration
+    @Published var visitedTiles: Set<Coordinate> = []
+
     // Game Log
     @Published private(set) var logs: [String] = []
 
@@ -142,6 +145,24 @@ final class World: ObservableObject, CombatDelegate {
             break
         default:
             print("Command not supported out of combat.")
+        }
+
+        updateVisitedTiles()
+    }
+
+    private func updateVisitedTiles() {
+        // Mark current tile as visited
+        visitedTiles.insert(partyPosition)
+
+        // Mark visible tiles as visited (simple radius or line of sight)
+        // For now, let's just mark a radius around the player
+        for dy in -2...2 {
+            for dx in -2...2 {
+                let coord = Coordinate(x: partyPosition.x + dx, y: partyPosition.y + dy)
+                if currentFloor.hasLineOfSight(from: partyPosition, to: coord) {
+                    visitedTiles.insert(coord)
+                }
+            }
         }
     }
 
