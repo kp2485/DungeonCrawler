@@ -1,0 +1,5 @@
+---
+triple:          'arm64-apple-darwin'
+binary-path:     '/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/Release/DungeonCrawler.app/Contents/MacOS/DungeonCrawler'
+relocations:     []
+...

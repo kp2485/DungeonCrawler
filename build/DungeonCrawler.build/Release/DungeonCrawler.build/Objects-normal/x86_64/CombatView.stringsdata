@@ -1,0 +1,64 @@
+{
+  "source": "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/CombatView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Waiting...",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 75
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select Ability",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 125
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld MP",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 137
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select Item",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 157
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select Target",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 186
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld/%lld HP",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 204
+        }
+      },
+      {
+        "comment": "",
+        "key": "ENEMIES",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 285
+        }
+      }
+    ]
+  },
+  "version": 1
+}

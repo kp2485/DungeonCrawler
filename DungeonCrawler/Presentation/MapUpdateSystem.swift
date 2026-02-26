@@ -53,20 +53,41 @@ class MapUpdateSystem: System {
             for col in world.currentFloor.minX...world.currentFloor.maxX {
                 let coordinate = Coordinate(x: col, y: row)
 
-                // Check for objects that might replace the wall (e.g. Doors)
-                var skipWallRendering = false
+                let tile = world.currentFloor.tileAt(coordinate)
+                var isWalkable = tile != .wall
                 if let object = world.currentFloor.objects[coordinate] {
                     if case .door = object.state {
-                        skipWallRendering = true
+                        isWalkable = true
                     }
                 }
 
-                switch world.currentFloor.tileAt(coordinate) {
-                case .wall:
-                    if !skipWallRendering {
-                        mapAnchor?.addChild(
-                            placeModelAt(model: "Wall", worldPosition: coordinate.toSIMD3))
+                if isWalkable {
+                    // Floors and Ceilings
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
+                    mapAnchor?.addChild(
+                        placeModelAt(model: "CeilingTile", worldPosition: coordinate.toSIMD3))
+
+                    // Boundary walls
+                    let directions: [CompassDirection] = [.north, .east, .south, .west]
+                    for dir in directions {
+                        let neighborCoord = coordinate + dir.toCoordinate
+                        let neighborTile = world.currentFloor.tileAt(neighborCoord)
+                        var neighborWalkable = neighborTile != .wall
+                        if let nObj = world.currentFloor.objects[neighborCoord] {
+                            if case .door = nObj.state {
+                                neighborWalkable = true
+                            }
+                        }
+
+                        if !neighborWalkable {
+                            mapAnchor?.addChild(
+                                placeBoundaryWall(at: coordinate.toSIMD3, direction: dir))
+                        }
                     }
+                }
+
+                switch tile {
                 case .stairsUp:
                     mapAnchor?.addChild(
                         placeModelAt(model: "stairsUp", worldPosition: coordinate.toSIMD3))
@@ -75,12 +96,9 @@ class MapUpdateSystem: System {
                         placeModelAt(model: "stairsDown", worldPosition: coordinate.toSIMD3))
                 case .winTarget:
                     mapAnchor?.addChild(
-                        placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
-                    mapAnchor?.addChild(
                         placeModelAt(model: "target", worldPosition: coordinate.toSIMD3))
                 default:
-                    mapAnchor?.addChild(
-                        placeModelAt(model: "FloorTile", worldPosition: coordinate.toSIMD3))
+                    break
                 }
 
                 // Render Interactive Objects
@@ -88,40 +106,12 @@ class MapUpdateSystem: System {
                     switch object.state {
                     case .door(let state):
                         // Orientation Check
-                        // Check North/South for Walls. If Walls are N/S, then Door is East/West (default?)
-                        // Usually:
-                        // If Walls are East/West (x-1, x+1), door faces South (default).
-                        // If Walls are North/South (y-1, y+1), door faces East (rotated 90).
-
                         var orientation = simd_quatf(angle: 0, axis: [0, 1, 0])
                         let left = Coordinate(x: col - 1, y: row)
                         let right = Coordinate(x: col + 1, y: row)
                         let up = Coordinate(x: col, y: row + 1)
                         let down = Coordinate(x: col, y: row - 1)
 
-                        // Heuristic: If we have walls to Left/Right, we are a "Horizontal" hallway (East-West), so the door cuts it vertically?
-                        // Wait.
-                        // Hallway: #.#
-                        // Door in middle: #+#
-                        // Movement is Left-Right. Door faces Left (or Right).
-                        // Plane of door is typically perpendicular to movement.
-                        // So if movement is East-West, Door Plane is North-South.
-                        // If movement is North-South, Door Plane is East-West.
-
-                        // Let's assume default model is "Door in a Wall running East-West", so facing North/South.
-
-                        // Check tiles:
-                        // Check tiles:
-                        let _ = world.currentFloor.tileAt(left) == .wall
-                        let _ = world.currentFloor.tileAt(right) == .wall
-
-                        // If walls are Left and Right, the "Wall" line is Horizontal. The Door fits into that Wall.
-                        // So the Door Plane is East-West. (Facing North/South).
-                        // If walls are Up and Down, the "Wall" line is Vertical. The Door fits into that Wall.
-                        // So the Door Plane is North-South. (Facing East/West).
-
-                        // My heuristics might be flipped depending on model. Let's try:
-                        // If walls are Up/Down (Vertical Wall), rotate 90.
                         let isWallUp = world.currentFloor.tileAt(up) == .wall
                         let isWallDown = world.currentFloor.tileAt(down) == .wall
 
@@ -176,42 +166,73 @@ class MapUpdateSystem: System {
         return cubeAnchor
     }
 
+    private func placeBoundaryWall(at worldPosition: SIMD3<Float>, direction: CompassDirection)
+        -> AnchorEntity
+    {
+        let wallAnchor = AnchorEntity(world: worldPosition)
+        let wallEntity = createCube(worldPosition: .zero, color: .lightGray, size: 1.0).children[0]
+        wallEntity.scale = SIMD3<Float>(1.0, 1.0, 0.05)
+        wallEntity.position.y = 0.5
+
+        switch direction {
+        case .north:
+            wallEntity.position.z = -0.5
+        case .south:
+            wallEntity.position.z = 0.5
+        case .east:
+            wallEntity.position.x = 0.5
+            wallEntity.orientation = simd_quatf(angle: .pi / 2, axis: [0, 1, 0])
+        case .west:
+            wallEntity.position.x = -0.5
+            wallEntity.orientation = simd_quatf(angle: .pi / 2, axis: [0, 1, 0])
+        }
+
+        wallAnchor.addChild(wallEntity)
+        return wallAnchor
+    }
+
     private func placeModelAt(
         model: String, worldPosition: SIMD3<Float>, orientation: simd_quatf? = nil
     ) -> AnchorEntity {
-        // Fallback or Load
         let entity: Entity
 
-        if let loaded = loadEntity(model: model) {
-            entity = loaded
-        } else {
-            // Specific Programmatic Fallbacks
-            switch model {
-            case "Door_Closed":
-                entity = createCube(worldPosition: .zero, color: .brown, size: 1.0).children[0]
-                entity.scale = SIMD3<Float>(1.0, 2.2, 0.2)  // Tall and thin
-                entity.position.y = 1.1  // Move UP so bottom is at 0 (approx, since box is 1.0 height unscaled? Wait. 1.0*2.2 = 2.2 height. Center at 0 -> -1.1 to 1.1. Move up 1.1 -> 0 to 2.2)
-            case "Door_Open":
-                // Open door: Thinner, maybe offset? Or just a frame?
-                // For now, a thin slab to the side or transparent?
-                // Let's make it a thin "Open" slab.
-                entity =
-                    createCube(
-                        worldPosition: .zero, color: .brown.withAlphaComponent(0.5), size: 1.0
-                    ).children[0]
-                // Scale it to look like an open door against the wall?
-                // Complex without full model. Let's just make it a smaller/different color cube.
-                entity.scale = SIMD3<Float>(0.2, 2.2, 1.0)  // Open door (rotated 90 effectively or just side jamb?)
-                entity.position.y = 1.1
-            case "Chest_Closed":
-                entity = createCube(worldPosition: .zero, color: .yellow, size: 0.5).children[0]
-                entity.position.y = 0.7  // Raised to clear 0.4 half-height of floor fallback + 0.25 half-height of self
-            case "Chest_Open":
-                entity = createCube(worldPosition: .zero, color: .gray, size: 0.5).children[0]
-                entity.position.y = 0.7
-            default:
-                entity = createCube(worldPosition: .zero, color: .gray).children[0]
-            }
+        switch model {
+        case "FloorTile":
+            entity = createCube(worldPosition: .zero, color: .darkGray, size: 1.0).children[0]
+            entity.scale = SIMD3<Float>(1.0, 0.05, 1.0)
+            entity.position.y = -0.025
+        case "CeilingTile":
+            entity = createCube(worldPosition: .zero, color: .darkGray, size: 1.0).children[0]
+            entity.scale = SIMD3<Float>(1.0, 0.05, 1.0)
+            entity.position.y = 1.025
+        case "Door_Closed":
+            entity = createCube(worldPosition: .zero, color: .brown, size: 1.0).children[0]
+            entity.scale = SIMD3<Float>(1.0, 1.0, 0.2)
+            entity.position.y = 0.5
+        case "Door_Open":
+            entity =
+                createCube(worldPosition: .zero, color: .brown.withAlphaComponent(0.5), size: 1.0)
+                .children[0]
+            entity.scale = SIMD3<Float>(0.2, 1.0, 1.0)
+            entity.position.y = 0.5
+            entity.position.x = -0.4
+        case "Chest_Closed":
+            entity = createCube(worldPosition: .zero, color: .yellow, size: 0.5).children[0]
+            entity.position.y = 0.25
+        case "Chest_Open":
+            entity = createCube(worldPosition: .zero, color: .lightGray, size: 0.5).children[0]
+            entity.position.y = 0.25
+        case "stairsUp":
+            entity = createCube(worldPosition: .zero, color: .cyan, size: 0.5).children[0]
+            entity.position.y = 0.25
+        case "stairsDown":
+            entity = createCube(worldPosition: .zero, color: .magenta, size: 0.5).children[0]
+            entity.position.y = 0.25
+        case "target":
+            entity = createCube(worldPosition: .zero, color: .green, size: 0.5).children[0]
+            entity.position.y = 0.25
+        default:
+            entity = createCube(worldPosition: .zero, color: .red).children[0]
         }
 
         let anchor = AnchorEntity(world: worldPosition)
@@ -224,24 +245,5 @@ class MapUpdateSystem: System {
         anchor.addChild(clonedEntity)
 
         return anchor
-    }
-
-    private func loadEntity(model: String) -> Entity? {
-        if let entity = modelCache[model] {
-            return entity
-        }
-
-        // Try loading
-        if let entity = try? Entity.load(named: model) {
-            modelCache[model] = entity
-            return entity
-        }
-
-        // Only warn if it's NOT one of our known programmatic fallbacks
-        let knownMissing = ["Door_Closed", "Door_Open", "Chest_Closed", "Chest_Open"]
-        if !knownMissing.contains(model) {
-            print("Warning: Failed to load model - \(model)")
-        }
-        return nil
     }
 }

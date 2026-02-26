@@ -38,9 +38,16 @@ struct GameView: NSViewRepresentable {
         arView.environment.lighting.resource = skyboxResource
 
         let camera = PerspectiveCamera()
+        // Provide a wider field of view to see more of the environment
+        camera.camera.fieldOfViewInDegrees = 90
+
         let cameraAnchor = AnchorEntity(world: .zero)
         cameraAnchor.addChild(camera)
         cameraAnchor.name = "CameraAnchor"
+
+        // Move the camera up to eye level, assuming floor is near 0 and walls are 1.0 high
+        cameraAnchor.position.y = 0.5
+
         arView.scene.addAnchor(cameraAnchor)
 
         let lightEntity = PointLight()

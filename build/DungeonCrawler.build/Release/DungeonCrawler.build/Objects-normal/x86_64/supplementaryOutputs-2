@@ -1,0 +1,12 @@
+{
+  "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/GameLogic/GreekPantheon/EncyclopediaA.swift" : {
+    "abi-baseline-json" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler.abi.json",
+    "const-values" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler-primary.swiftconstvalues",
+    "dependencies" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler-primary.d",
+    "diagnostics" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler-primary.dia",
+    "objc-header" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler-Swift.h",
+    "swiftdoc" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler.swiftdoc",
+    "swiftmodule" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler.swiftmodule",
+    "swiftsourceinfo" : "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/build/DungeonCrawler.build/Release/DungeonCrawler.build/Objects-normal/x86_64/DungeonCrawler.swiftsourceinfo"
+  }
+}

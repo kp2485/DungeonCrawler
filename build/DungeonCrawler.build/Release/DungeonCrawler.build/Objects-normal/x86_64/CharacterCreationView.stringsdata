@@ -1,0 +1,72 @@
+{
+  "source": "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/CharacterCreationView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "CREATE CHARACTER",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 33
+        }
+      },
+      {
+        "comment": "",
+        "key": "NAME",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Enter Name",
+        "location": {
+          "startingColumn": 43,
+          "startingLine": 56
+        }
+      },
+      {
+        "comment": "",
+        "key": "SEX",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 66
+        }
+      },
+      {
+        "comment": "",
+        "key": "BONUS POINTS",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "??",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 93
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 85
+        }
+      },
+      {
+        "comment": "",
+        "key": "PROFESSION",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 113
+        }
+      }
+    ]
+  },
+  "version": 1
+}

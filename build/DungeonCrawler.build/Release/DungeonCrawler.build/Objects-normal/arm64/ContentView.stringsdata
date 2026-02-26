@@ -1,0 +1,24 @@
+{
+  "source": "/Users/kylepeterson/Library/Mobile Documents/com~apple~CloudDocs/Apps/DungeonCrawler/DungeonCrawler/Presentation/ContentView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "- %@ -",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 134
+        }
+      },
+      {
+        "comment": "",
+        "key": "MAP AREA",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 228
+        }
+      }
+    ]
+  },
+  "version": 1
+}

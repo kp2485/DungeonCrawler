@@ -35,8 +35,22 @@ class WorldUpdateSystem: System {
 
     func update(context: SceneUpdateContext) {
         world.update(at: Date())
-        
-        cameraAnchor.position = world.partyPosition.toSIMD3
-        cameraAnchor.transform.rotation = world.partyHeading.toFloatQuaternion
+
+        var targetPosition = world.partyPosition.toSIMD3
+        targetPosition.y = 0.5
+
+        let targetRotation = world.partyHeading.toFloatQuaternion
+
+        let deltaTime = Float(context.deltaTime)
+        let moveSpeed: Float = 10.0  // adjust for preferred speed
+        let rotateSpeed: Float = 10.0
+
+        let currentPosition = cameraAnchor.position
+        let tPosition = min(1.0, deltaTime * moveSpeed)
+        cameraAnchor.position = currentPosition + (targetPosition - currentPosition) * tPosition
+
+        let currentRotation = cameraAnchor.transform.rotation
+        let tRotation = min(1.0, deltaTime * rotateSpeed)
+        cameraAnchor.transform.rotation = simd_slerp(currentRotation, targetRotation, tRotation)
     }
 }
